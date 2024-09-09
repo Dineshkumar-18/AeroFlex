@@ -13,11 +13,9 @@ namespace AeroFlex.Models
         [Required]
         [MaxLength(100)]
         public string CountryName { get; set; }
-
         [Required]
         public int CurrencyId { get; set; }
-
-        [ForeignKey(nameof(CountryId))]
+        [ForeignKey("CurrencyId")]
         public virtual Currency Currency { get; set; }
 
         public ICollection<FlightTax> FlightTaxes { get; set; }

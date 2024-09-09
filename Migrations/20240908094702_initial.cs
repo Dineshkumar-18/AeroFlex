@@ -81,22 +81,11 @@ namespace AeroFlex.Migrations
                     FirstName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     LastName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    AddressId = table.Column<int>(type: "int", nullable: false),
+                    AddressId = table.Column<int>(type: "int", nullable: true),
                     DateOfBirth = table.Column<DateOnly>(type: "date", nullable: false),
                     RegisterationDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     LastLogin = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    IsActive = table.Column<bool>(type: "bit", nullable: false),
-                    AddressId1 = table.Column<int>(type: "int", nullable: true),
-                    Discriminator = table.Column<string>(type: "nvarchar(13)", maxLength: 13, nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    CompanyName = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CompanyRegistrationNumber = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CompanyPhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CompanyEmail = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    OperatingLicenseNumber = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    JoinedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    TotalFlightsManaged = table.Column<int>(type: "int", nullable: true),
-                    SupportContact = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    IsActive = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -106,18 +95,14 @@ namespace AeroFlex.Migrations
                         column: x => x.AddressId,
                         principalTable: "Addresses",
                         principalColumn: "AddressId");
-                    table.ForeignKey(
-                        name: "FK_Users_Addresses_AddressId1",
-                        column: x => x.AddressId1,
-                        principalTable: "Addresses",
-                        principalColumn: "AddressId");
                 });
 
             migrationBuilder.CreateTable(
                 name: "Countries",
                 columns: table => new
                 {
-                    CountryId = table.Column<int>(type: "int", nullable: false),
+                    CountryId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
                     CountryCode = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     CountryName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     CurrencyId = table.Column<int>(type: "int", nullable: false)
@@ -126,31 +111,51 @@ namespace AeroFlex.Migrations
                 {
                     table.PrimaryKey("PK_Countries", x => x.CountryId);
                     table.ForeignKey(
-                        name: "FK_Countries_Currencies_CountryId",
-                        column: x => x.CountryId,
+                        name: "FK_Countries_Currencies_CurrencyId",
+                        column: x => x.CurrencyId,
                         principalTable: "Currencies",
                         principalColumn: "CurrencyId",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "Airlines",
+                name: "Admins",
                 columns: table => new
                 {
-                    AirlineId = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    AirlineName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    IataCode = table.Column<string>(type: "nvarchar(2)", maxLength: 2, nullable: false),
-                    Headquarters = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
-                    Country = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    FlightOwnerId = table.Column<int>(type: "int", nullable: false)
+                    UserId = table.Column<int>(type: "int", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Airlines", x => x.AirlineId);
+                    table.PrimaryKey("PK_Admins", x => x.UserId);
                     table.ForeignKey(
-                        name: "FK_Airlines_Users_FlightOwnerId",
-                        column: x => x.FlightOwnerId,
+                        name: "FK_Admins_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "UserId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "FlightOwners",
+                columns: table => new
+                {
+                    UserId = table.Column<int>(type: "int", nullable: false),
+                    CompanyName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CompanyRegistrationNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CompanyPhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CompanyEmail = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    OperatingLicenseNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    JoinedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    TotalFlightsManaged = table.Column<int>(type: "int", nullable: true),
+                    SupportContact = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_FlightOwners", x => x.UserId);
+                    table.ForeignKey(
+                        name: "FK_FlightOwners_Users_UserId",
+                        column: x => x.UserId,
                         principalTable: "Users",
                         principalColumn: "UserId",
                         onDelete: ReferentialAction.Cascade);
@@ -242,6 +247,56 @@ namespace AeroFlex.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Airlines",
+                columns: table => new
+                {
+                    AirlineId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    AirlineName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    IataCode = table.Column<string>(type: "nvarchar(2)", maxLength: 2, nullable: false),
+                    Headquarters = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    Country = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    FlightOwnerId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Airlines", x => x.AirlineId);
+                    table.ForeignKey(
+                        name: "FK_Airlines_FlightOwners_FlightOwnerId",
+                        column: x => x.FlightOwnerId,
+                        principalTable: "FlightOwners",
+                        principalColumn: "UserId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Itineraries",
+                columns: table => new
+                {
+                    ItineraryId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    StartAirportId = table.Column<int>(type: "int", nullable: false),
+                    EndAirportId = table.Column<int>(type: "int", nullable: false),
+                    TotalStops = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Itineraries", x => x.ItineraryId);
+                    table.ForeignKey(
+                        name: "FK_Itineraries_Airports_EndAirportId",
+                        column: x => x.EndAirportId,
+                        principalTable: "Airports",
+                        principalColumn: "AirportId",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Itineraries_Airports_StartAirportId",
+                        column: x => x.StartAirportId,
+                        principalTable: "Airports",
+                        principalColumn: "AirportId",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Flights",
                 columns: table => new
                 {
@@ -273,33 +328,6 @@ namespace AeroFlex.Migrations
                     table.ForeignKey(
                         name: "FK_Flights_Airports_DepartureAirportId",
                         column: x => x.DepartureAirportId,
-                        principalTable: "Airports",
-                        principalColumn: "AirportId",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Itineraries",
-                columns: table => new
-                {
-                    ItineraryId = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    StartAirportId = table.Column<int>(type: "int", nullable: false),
-                    EndAirportId = table.Column<int>(type: "int", nullable: false),
-                    TotalStops = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Itineraries", x => x.ItineraryId);
-                    table.ForeignKey(
-                        name: "FK_Itineraries_Airports_EndAirportId",
-                        column: x => x.EndAirportId,
-                        principalTable: "Airports",
-                        principalColumn: "AirportId",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_Itineraries_Airports_StartAirportId",
-                        column: x => x.StartAirportId,
                         principalTable: "Airports",
                         principalColumn: "AirportId",
                         onDelete: ReferentialAction.Restrict);
@@ -758,6 +786,12 @@ namespace AeroFlex.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_Countries_CurrencyId",
+                table: "Countries",
+                column: "CurrencyId",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Flights_AirlineId",
                 table: "Flights",
                 column: "AirlineId");
@@ -923,19 +957,16 @@ namespace AeroFlex.Migrations
                 name: "IX_Users_AddressId",
                 table: "Users",
                 column: "AddressId",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Users_AddressId1",
-                table: "Users",
-                column: "AddressId1",
                 unique: true,
-                filter: "[AddressId1] IS NOT NULL");
+                filter: "[AddressId] IS NOT NULL");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "Admins");
+
             migrationBuilder.DropTable(
                 name: "FlightSegments");
 
@@ -1000,16 +1031,19 @@ namespace AeroFlex.Migrations
                 name: "Airports");
 
             migrationBuilder.DropTable(
-                name: "Users");
+                name: "FlightOwners");
 
             migrationBuilder.DropTable(
                 name: "Countries");
 
             migrationBuilder.DropTable(
-                name: "Addresses");
+                name: "Users");
 
             migrationBuilder.DropTable(
                 name: "Currencies");
+
+            migrationBuilder.DropTable(
+                name: "Addresses");
         }
     }
 }

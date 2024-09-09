@@ -15,5 +15,6 @@ namespace AeroFlex.Models
         [MaxLength(70)]
         public string CurrencyName { get; set; }
         public ICollection<FlightTax> FlightTaxes { get; set; }
+        public virtual Country Country { get; set; }
     }
 }

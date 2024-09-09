@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AeroFlex.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240907063622_initial")]
-    partial class initial
+    [Migration("20240909085812_refreshtokeninfo_table_created")]
+    partial class refreshtokeninfo_table_created
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -254,7 +254,10 @@ namespace AeroFlex.Migrations
             modelBuilder.Entity("AeroFlex.Models.Country", b =>
                 {
                     b.Property<int>("CountryId")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CountryId"));
 
                     b.Property<string>("CountryCode")
                         .IsRequired()
@@ -269,6 +272,9 @@ namespace AeroFlex.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("CountryId");
+
+                    b.HasIndex("CurrencyId")
+                        .IsUnique();
 
                     b.ToTable("Countries");
                 });
@@ -627,6 +633,28 @@ namespace AeroFlex.Migrations
                     b.ToTable("Payments");
                 });
 
+            modelBuilder.Entity("AeroFlex.Models.RefreshTokenInfo", b =>
+                {
+                    b.Property<int>("RefreshTokenId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RefreshTokenId"));
+
+                    b.Property<string>("RefreshToken")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("RefreshTokenId");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("RefreshTokens");
+                });
+
             modelBuilder.Entity("AeroFlex.Models.Refund", b =>
                 {
                     b.Property<int>("RefundId")
@@ -809,19 +837,10 @@ namespace AeroFlex.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("UserId"));
 
                     b.Property<int?>("AddressId")
-                        .IsRequired()
-                        .HasColumnType("int");
-
-                    b.Property<int?>("AddressId1")
                         .HasColumnType("int");
 
                     b.Property<DateOnly>("DateOfBirth")
                         .HasColumnType("date");
-
-                    b.Property<string>("Discriminator")
-                        .IsRequired()
-                        .HasMaxLength(13)
-                        .HasColumnType("nvarchar(13)");
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -859,17 +878,12 @@ namespace AeroFlex.Migrations
                     b.HasKey("UserId");
 
                     b.HasIndex("AddressId")
-                        .IsUnique();
-
-                    b.HasIndex("AddressId1")
                         .IsUnique()
-                        .HasFilter("[AddressId1] IS NOT NULL");
+                        .HasFilter("[AddressId] IS NOT NULL");
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
 
-                    b.HasDiscriminator().HasValue("User");
-
-                    b.UseTphMappingStrategy();
+                    b.UseTptMappingStrategy();
                 });
 
             modelBuilder.Entity("AeroFlex.Models.UserRoleMapping", b =>
@@ -903,7 +917,7 @@ namespace AeroFlex.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.HasDiscriminator().HasValue("Admin");
+                    b.ToTable("Admins", (string)null);
                 });
 
             modelBuilder.Entity("AeroFlex.Models.FlightOwner", b =>
@@ -939,7 +953,7 @@ namespace AeroFlex.Migrations
                     b.Property<int?>("TotalFlightsManaged")
                         .HasColumnType("int");
 
-                    b.HasDiscriminator().HasValue("FlightOwner");
+                    b.ToTable("FlightOwners", (string)null);
                 });
 
             modelBuilder.Entity("AeroFlex.Models.Airline", b =>
@@ -1040,8 +1054,8 @@ namespace AeroFlex.Migrations
             modelBuilder.Entity("AeroFlex.Models.Country", b =>
                 {
                     b.HasOne("AeroFlex.Models.Currency", "Currency")
-                        .WithMany()
-                        .HasForeignKey("CountryId")
+                        .WithOne("Country")
+                        .HasForeignKey("AeroFlex.Models.Country", "CurrencyId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -1219,6 +1233,17 @@ namespace AeroFlex.Migrations
                     b.Navigation("Booking");
                 });
 
+            modelBuilder.Entity("AeroFlex.Models.RefreshTokenInfo", b =>
+                {
+                    b.HasOne("AeroFlex.Models.User", "User")
+                        .WithOne("RefreshTokenInfo")
+                        .HasForeignKey("AeroFlex.Models.RefreshTokenInfo", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("AeroFlex.Models.Refund", b =>
                 {
                     b.HasOne("AeroFlex.Models.CancellationInfo", "CancellationInfo")
@@ -1316,14 +1341,9 @@ namespace AeroFlex.Migrations
             modelBuilder.Entity("AeroFlex.Models.User", b =>
                 {
                     b.HasOne("AeroFlex.Models.Address", "Address")
-                        .WithOne()
-                        .HasForeignKey("AeroFlex.Models.User", "AddressId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("AeroFlex.Models.Address", null)
                         .WithOne("User")
-                        .HasForeignKey("AeroFlex.Models.User", "AddressId1");
+                        .HasForeignKey("AeroFlex.Models.User", "AddressId")
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.Navigation("Address");
                 });
@@ -1345,6 +1365,24 @@ namespace AeroFlex.Migrations
                     b.Navigation("Role");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("AeroFlex.Models.Admin", b =>
+                {
+                    b.HasOne("AeroFlex.Models.User", null)
+                        .WithOne()
+                        .HasForeignKey("AeroFlex.Models.Admin", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("AeroFlex.Models.FlightOwner", b =>
+                {
+                    b.HasOne("AeroFlex.Models.User", null)
+                        .WithOne()
+                        .HasForeignKey("AeroFlex.Models.FlightOwner", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("AeroFlex.Models.Address", b =>
@@ -1411,6 +1449,9 @@ namespace AeroFlex.Migrations
 
             modelBuilder.Entity("AeroFlex.Models.Currency", b =>
                 {
+                    b.Navigation("Country")
+                        .IsRequired();
+
                     b.Navigation("FlightTaxes");
                 });
 
@@ -1492,6 +1533,9 @@ namespace AeroFlex.Migrations
             modelBuilder.Entity("AeroFlex.Models.User", b =>
                 {
                     b.Navigation("Bookings");
+
+                    b.Navigation("RefreshTokenInfo")
+                        .IsRequired();
 
                     b.Navigation("RoleMapping")
                         .IsRequired();
