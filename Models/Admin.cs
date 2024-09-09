@@ -5,7 +5,7 @@ namespace AeroFlex.Models
 {
     public class Admin : User
     {
-
+       
         [Required]
         public DateTime CreatedAt { get; set; } = DateTime.Now;
     }

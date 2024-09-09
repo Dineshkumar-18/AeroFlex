@@ -37,18 +37,35 @@ namespace AeroFlex.Data
         public DbSet<Seat> Seats { get; set; }
 		public DbSet<SeatTypePricing> SeatTypePricings { get; set; }
         public DbSet<Ticket> Tickets { get; set; }
+		public DbSet<RefreshTokenInfo> RefreshTokenInfos { get; set; }
 
 
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{
-			//user entity
-			modelBuilder.Entity<User>(entity =>
+
+            modelBuilder.Entity<User>()
+            .ToTable("Users");
+
+            modelBuilder.Entity<FlightOwner>()
+                .ToTable("FlightOwners")
+                .HasBaseType<User>(); // Configure inheritance relationship
+
+            modelBuilder.Entity<Admin>()
+                .ToTable("Admins")
+                .HasBaseType<User>(); // Configure inheritance relationship
+
+            //user entity
+            modelBuilder.Entity<User>(entity =>
 			{
 
-				entity.HasOne(u => u.Address)
-				.WithOne()
-				.OnDelete(DeleteBehavior.NoAction);
-			});
+               entity.HasOne(u => u.Address)   // Navigation from User to Address
+        .WithOne(a => a.User)      // Navigation from Address to User
+        .HasForeignKey<User>(u => u.AddressId)  // Explicitly set AddressId as FK
+        .IsRequired(false)         // Make the relationship optional
+        .OnDelete(DeleteBehavior.NoAction);
+
+
+            });
 			//booking entity
 			modelBuilder.Entity<Booking>(entity =>
 			{

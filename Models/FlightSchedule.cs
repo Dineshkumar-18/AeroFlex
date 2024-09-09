@@ -16,7 +16,7 @@ namespace AeroFlex.Models
         LANDED = 8,
         ARRIVED = 9,
         CANCELLED = 10,
-        DIVERTED = 11,
+        DIVERTED = 11
     }
 
     public class FlightSchedule
@@ -38,7 +38,7 @@ namespace AeroFlex.Models
         [Required]
         public FlightStatus FlightStatus { get; set; }
         [Required]
-        public DateTime ScheduledAt { get; set; }
+        public DateTime ScheduledAt { get; set; }=DateTime.Now;
         public DateTime? UpdatedAt {  get; set; }
         public ICollection<Seat> Seats { get; set; }
         public ICollection<SeatTypePricing> SeatTypePricing { get; set; }
