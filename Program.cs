@@ -18,6 +18,7 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddScoped<IUserAccount,UserAccountRepository>();
 builder.Services.AddScoped<IUserAccount, FlightOwnerAccountRepository>();
+builder.Services.AddScoped<IUserAccount, AdminAcccountRepository>();
 builder.Services.Configure<JwtSection>(builder.Configuration.GetSection("JwtSection"));
 
 var app = builder.Build();

@@ -7,7 +7,10 @@ namespace AeroFlex.Models
     {
         [Key]
         public int RefreshTokenId { get; set; }
+        [Required]
         public string? RefreshToken { get; set; }
+        [Required]
+        public DateTime ExpirationTime { get; set; }
         public int UserId { get; set; }
 
         [ForeignKey("UserId")]

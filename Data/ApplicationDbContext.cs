@@ -257,15 +257,20 @@ namespace AeroFlex.Data
 
             });
 
-            modelBuilder.Entity<UserRoleMapping>()
-            .HasOne(rm => rm.User)
-            .WithMany(u => u.RoleMappings)
-            .HasForeignKey(rm => rm.UserId);
+          
 
             modelBuilder.Entity<UserRoleMapping>()
-            .HasOne(rm => rm.Role)
-            .WithMany(r => r.UserRoleMappings)
-            .HasForeignKey(rm => rm.RoleId);
+            .HasKey(urm => new { urm.UserId, urm.RoleId });
+
+            modelBuilder.Entity<UserRoleMapping>()
+                .HasOne(urm => urm.User)
+                .WithMany(u => u.RoleMappings)
+                .HasForeignKey(urm => urm.UserId);
+
+            modelBuilder.Entity<UserRoleMapping>()
+                .HasOne(urm => urm.Role)
+                .WithMany(r=>r.UserRoleMappings)
+                .HasForeignKey(urm => urm.RoleId);
 
         }
 

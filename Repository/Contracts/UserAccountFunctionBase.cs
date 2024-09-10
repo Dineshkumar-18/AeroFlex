@@ -30,6 +30,13 @@ namespace AeroFlex.Repository.Contracts
             return (T)result.Entity;
         }
 
+        public async Task<List<T>> AddToDatabaseRange<T>(IEnumerable<T> entities) where T : class
+        {
+            _context.Set<T>().AddRange(entities);
+            await _context.SaveChangesAsync();
+            return (List<T>)entities;
+        }
+
 
 
         public async Task<User> FindByEmail(string email)
@@ -42,33 +49,41 @@ namespace AeroFlex.Repository.Contracts
             return await _context.Users.FirstOrDefaultAsync(u => u.UserName.Equals(username));
         }
 
-        public async Task<Role?> FindRoleName(int RoleId)
-        {
-            return await _context.Roles.FirstOrDefaultAsync(r => r.RoleId == RoleId);
-        }
+        //public async Task<List<Role>?> FindRoleName(List<UserRoleMapping> roleMappings)
+        //{
+        //    foreach (UserRoleMapping roleMapping in roleMappings) {
 
-        public async Task<UserRoleMapping?> FindUserRole(int UserId)
-        {
-            return await _context.RoleMappings.FirstOrDefaultAsync(rm => rm.UserId == UserId);
-        }
+        //    }
 
-        public string GenerateJwtToken(User user, string roleName)
+        //    return await _context.Roles.Where(r => r.RoleId == roleMappings.);
+        //}
+
+        //public async Task<List<UserRoleMapping>?> FindUserRole(int UserId)
+        //{
+        //    return await _context.RoleMappings.Where(rm => rm.UserId == UserId).ToListAsync();
+        //}
+
+        public string GenerateJwtToken(User user, List<String> roleNames)
         {
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config.Value.Key!));
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-            var claims = new[]
+            var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier,user.UserId.ToString()),
                 new Claim(ClaimTypes.Email,user.Email),
-                new Claim(ClaimTypes.Name,user.UserName),
-                new Claim(ClaimTypes.Role,roleName)
+                new Claim(ClaimTypes.Name,user.UserName)
             };
+
+            foreach(var role in roleNames)
+            {
+                claims.Add(new Claim(ClaimTypes.Role,role));
+            }
 
             var jwtToken = new JwtSecurityToken(
                 issuer: _config.Value.Issuer,
                 audience: _config.Value.Audience,
                 claims: claims,
-                expires: DateTime.Now.AddDays(1),
+                expires: DateTime.Now.AddHours(1),
                 signingCredentials: credentials
              );
             return new JwtSecurityTokenHandler().WriteToken(jwtToken);

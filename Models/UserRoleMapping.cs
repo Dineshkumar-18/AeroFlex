@@ -6,6 +6,7 @@ namespace AeroFlex.Models
     public class UserRoleMapping
     {
         [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int UserRoleMappingId {  get; set; }
         public int RoleId { get; set; }
         public int UserId { get; set; }

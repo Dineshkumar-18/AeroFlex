@@ -4,64 +4,64 @@ using AeroFlex.Helpers;
 using AeroFlex.Models;
 using AeroFlex.Repository.Contracts;
 using AeroFlex.Response;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using System.Linq;
+using System.Security.Claims;
 
 namespace AeroFlex.Repository.Implementations
 {
-    public class FlightOwnerAccountRepository : UserAccountFunctionBase
+    public class AdminAcccountRepository : UserAccountFunctionBase
     {
-        public FlightOwnerAccountRepository(ApplicationDbContext context, IOptions<JwtSection> config) : base(context, config)
+        public AdminAcccountRepository(ApplicationDbContext context, IOptions<JwtSection> config) : base(context, config)
         {
-
         }
 
-        public override async Task<GeneralResponse> CreateAsync(Register register)
+        public async override Task<GeneralResponse> CreateAsync(Register register)
         {
-            
-                if (register is null) return new GeneralResponse(false, "Model is invalid");
+            if (register is null) return new GeneralResponse(false, "Model is invalid");
 
-                var checkUserByEmail = await FindByEmail(register.Email);
-                if (checkUserByEmail is not null)
-                {
-                    return new GeneralResponse(false, "Email already exist");
-                }
-                var checkUserByUserName = await FindByUserName(register.UserName);
-                if (checkUserByUserName is not null)
-                {
-                    return new GeneralResponse(false, "Username already exist");
-                }
+            var checkUserByEmail = await FindByEmail(register.Email);
+            if (checkUserByEmail is not null)
+            {
+                return new GeneralResponse(false, "Email already exist");
+            }
+            var checkUserByUserName = await FindByUserName(register.UserName);
+            if (checkUserByUserName is not null)
+            {
+                return new GeneralResponse(false, "Username already exist");
+            }
 
-                var user = await AddToDatabase(new FlightOwner
-                {
-                    UserName = register.UserName,
-                    Password = BCrypt.Net.BCrypt.HashPassword(register.Password),
-                    Email = register.Email,
-                    FirstName = register.FirstName,
-                    LastName = register.LastName,
-                    PhoneNumber = register.PhoneNumber,
-                });
-
+            var user = await AddToDatabase(new Admin
+            {
+                UserName = register.UserName,
+                Password = BCrypt.Net.BCrypt.HashPassword(register.Password),
+                Email = register.Email,
+                FirstName = register.FirstName,
+                LastName = register.LastName,
+                PhoneNumber = register.PhoneNumber,
+            });
 
             var roles = await _context.Roles
-            .Where(r => r.RoleName.Equals(Roles.FlightOwner.ToString()) || r.RoleName.Equals(Roles.User.ToString()))
-            .ToListAsync();
+                .Where(r => r.RoleName.Equals(Roles.Admin.ToString()) || r.RoleName.Equals(Roles.User.ToString()))
+                .ToListAsync();
 
             if (!roles.Any()) return new GeneralResponse(false, "Roles not found");
 
             //ensure both roles are found
-            var FlightOwnerRole = roles.FirstOrDefault(r => r.RoleName.Equals(Roles.FlightOwner.ToString()));
+            var adminRole = roles.FirstOrDefault(r => r.RoleName.Equals(Roles.Admin.ToString()));
             var UserRole = roles.FirstOrDefault(r => r.RoleName.Equals(Roles.User.ToString()));
 
-            if (FlightOwnerRole == null) return new GeneralResponse(false, "FlightOwner role not found");
+            if (adminRole == null) return new GeneralResponse(false, "Admin role not found");
             if (UserRole == null) return new GeneralResponse(false, "User role not found");
 
-            var roleMappings = new List<UserRoleMapping>
+           var roleMappings = new List<UserRoleMapping>
            {
                  new UserRoleMapping
                 {
                     UserId = user.UserId,
-                    RoleId = FlightOwnerRole.RoleId
+                    RoleId = adminRole.RoleId
                 },
                 new UserRoleMapping
                 {
@@ -70,32 +70,30 @@ namespace AeroFlex.Repository.Implementations
                 }
            };
 
-            var mappedRoles = await AddToDatabaseRange(roleMappings);
-            if (mappedRoles.Count != 2) return new GeneralResponse(false, "Error while role mapping");
+            var mappedRoles=await AddToDatabaseRange(roleMappings);
+            if (mappedRoles.Count!=2) return new GeneralResponse(false, "Error while role mapping");
+
             return new GeneralResponse(true, "Flight Owner Registered Successfully");
         }
-
-
 
         public override async Task<LoginResponse> SignInAsync(Login login)
         {
             if (login == null) return new LoginResponse(false, "Model is invalid");
 
 
-            var user = await _context.FlightOwners
+            var user = await _context.Admins
                       .Include(u => u.RoleMappings)
                       .ThenInclude(urm => urm.Role)
-                      .FirstOrDefaultAsync(u => u.Email == login.Email || u.UserName == login.Email);
-            if (user == null)
+                      .FirstOrDefaultAsync(u => u.Email == login.Email || u.UserName==login.Email);
+            if(user ==null)
             {
                 return new LoginResponse(false, "Username or Email doesnot exist");
             }
-            else if (!BCrypt.Net.BCrypt.Verify(login.Password, user.Password))
+            else if(!BCrypt.Net.BCrypt.Verify(login.Password, user.Password))
             {
                 return new LoginResponse(false, "Username or Password is invalid");
             }
-            else
-            {
+            else {
                 var roleNames = user.RoleMappings.Select(urm => urm.Role.RoleName).ToList();
 
                 string jwtToken = GenerateJwtToken(user, roleNames);

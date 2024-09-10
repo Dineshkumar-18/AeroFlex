@@ -22,10 +22,9 @@ namespace AeroFlex.Repository.Implementations
             
         }
 
-        public override async Task<GeneralResponse> CreateAsync<T>(T reg)
+        public override async Task<GeneralResponse> CreateAsync(Register register)
         {
-            if (reg is Register register)
-            {
+           
                 if (register is null) return new GeneralResponse(false, "Model is invalid");
 
                 var checkUserByEmail = await FindByEmail(register.Email);
@@ -59,37 +58,38 @@ namespace AeroFlex.Repository.Implementations
                 });
 
                 return new GeneralResponse(true, "User Registered Successfully");
-            }
-            return new GeneralResponse(false, "Model is invalid");
 
         }
 
-        
+
 
         public override async Task<LoginResponse> SignInAsync(Login login)
         {
             if (login == null) return new LoginResponse(false, "Model is invalid");
-            User? user = null;
-            var userEmail = await FindByEmail(login.Email);
-            var userName = await FindByUserName(login.Email);
-            if (userEmail is not null) user = userEmail;
-            else if (userName is not null) user = userName;
 
-            if (user is null)
+
+            var user = await _context.Users
+                      .Include(u => u.RoleMappings)
+                      .ThenInclude(urm => urm.Role)
+                      .FirstOrDefaultAsync(u => u.Email == login.Email || u.UserName == login.Email);
+            if (user == null)
             {
                 return new LoginResponse(false, "Username or Email doesnot exist");
             }
-            if((user.Email==login.Email || user.UserName==login.Email) && BCrypt.Net.BCrypt.Verify(login.Password,user.Password))
+            else if (!BCrypt.Net.BCrypt.Verify(login.Password, user.Password))
             {
-                var role = await FindUserRole(user.UserId);
-                var roleName = await FindRoleName(role!.RoleId);
+                return new LoginResponse(false, "Username or Password is invalid");
+            }
+            else
+            {
+                var roleNames = user.RoleMappings.Select(urm => urm.Role.RoleName).ToList();
 
-                string jwtToken = GenerateJwtToken(user, roleName!.RoleName);
+                string jwtToken = GenerateJwtToken(user, roleNames);
                 string refreshToken = GenerateRefreshToken();
 
-                var refreshTokenInfo=await _context.RefreshTokenInfos.FirstOrDefaultAsync(rt=>rt.UserId== user.UserId);
+                var refreshTokenInfo = await _context.RefreshTokenInfos.FirstOrDefaultAsync(rt => rt.UserId == user.UserId);
 
-                if(refreshTokenInfo is not null)
+                if (refreshTokenInfo is not null)
                 {
                     refreshTokenInfo.RefreshToken = refreshToken;
                     await _context.SaveChangesAsync();
@@ -98,14 +98,14 @@ namespace AeroFlex.Repository.Implementations
                 {
                     await AddToDatabase(new RefreshTokenInfo
                     {
-                        RefreshToken=refreshToken,
-                        UserId=user.UserId,
+                        RefreshToken = refreshToken,
+                        ExpirationTime = DateTime.Now.AddDays(1),
+                        UserId = user.UserId,
                     });
                 }
 
                 return new LoginResponse(true, "Login succeffully", jwtToken, refreshToken);
             }
-            return new LoginResponse(false, "Email or Password is invalid");
 
         }
     }
