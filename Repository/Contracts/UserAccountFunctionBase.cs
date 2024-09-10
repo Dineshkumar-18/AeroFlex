@@ -76,7 +76,7 @@ namespace AeroFlex.Repository.Contracts
 
         public string GenerateRefreshToken() =>Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
 
-        public abstract Task<GeneralResponse> CreateAsync<T>(T register);
+        public abstract Task<GeneralResponse> CreateAsync(Register register);
         public abstract Task<LoginResponse> SignInAsync(Login login);
 
     

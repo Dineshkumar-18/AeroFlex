@@ -39,7 +39,7 @@ namespace AeroFlex.Models
         [ForeignKey("AddressId")]
         public virtual Address Address { get; set; }
 
-        public virtual UserRoleMapping RoleMapping { get; set; }
+        public ICollection<UserRoleMapping> RoleMappings { get; set; }
         public ICollection<Booking> Bookings { get; set; }
 
         public virtual RefreshTokenInfo RefreshTokenInfo { get; set; }

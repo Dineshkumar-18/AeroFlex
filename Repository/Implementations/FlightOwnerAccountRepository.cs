@@ -16,10 +16,9 @@ namespace AeroFlex.Repository.Implementations
 
         }
 
-        public override async Task<GeneralResponse> CreateAsync<T>(T reg)
+        public override async Task<GeneralResponse> CreateAsync(Register register)
         {
-            if (reg is FlightOwnerRegister register)
-            {
+            
                 if (register is null) return new GeneralResponse(false, "Model is invalid");
 
                 var checkUserByEmail = await FindByEmail(register.Email);
@@ -41,11 +40,6 @@ namespace AeroFlex.Repository.Implementations
                     FirstName = register.FirstName,
                     LastName = register.LastName,
                     PhoneNumber = register.PhoneNumber,
-                    CompanyName = register.CompanyName,
-                    CompanyRegistrationNumber = register.CompanyRegistrationNumber,
-                    CompanyPhoneNumber = register.CompanyPhoneNumber,
-                    CompanyEmail = register.CompanyEmail,
-                    OperatingLicenseNumber = register.OperatingLicenseNumber,
                 });
 
 
@@ -58,8 +52,6 @@ namespace AeroFlex.Repository.Implementations
                     RoleId = userRole.RoleId
                 });
                 return new GeneralResponse(true, "Flight Owner Registered Successfully");
-            }
-            return new GeneralResponse(false, "Model is invalid");
         }
 
 

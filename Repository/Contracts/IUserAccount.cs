@@ -6,7 +6,7 @@ namespace AeroFlex.Repository.Contracts
 {
     public interface IUserAccount
     {
-        Task<GeneralResponse> CreateAsync<T>(T register);
+        Task<GeneralResponse> CreateAsync(Register register);
         Task<LoginResponse> SignInAsync(Login login);
         Task<UserRoleMapping?> FindUserRole(int UserId);
         Task<Role?> FindRoleName(int RoleId);
