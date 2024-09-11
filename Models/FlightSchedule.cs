@@ -6,6 +6,7 @@ namespace AeroFlex.Models
 {
     public enum FlightStatus
     {
+        SCHEDULING_PROCESS=0,
         SCHEDULED = 1,
         ONTIME = 2,
         DELAYED = 3,
@@ -34,9 +35,10 @@ namespace AeroFlex.Models
         [Required]
         public DateTime ArrivalTime { get; set; }
         [Required]
-        public TimeOnly Duration { get; set; }
+        [Column(TypeName = "time")]
+        public TimeSpan Duration { get; set; }
         [Required]
-        public FlightStatus FlightStatus { get; set; }
+        public FlightStatus FlightStatus { get; set; }=FlightStatus.SCHEDULING_PROCESS;
         [Required]
         public DateTime ScheduledAt { get; set; }=DateTime.Now;
         public DateTime? UpdatedAt {  get; set; }

@@ -7,7 +7,7 @@ namespace AeroFlex.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class AdminController(IUserAccount userRepository) : ControllerBase
+    public class AdminController(IAdminAccount adminRepository) : ControllerBase
     {
         [HttpPost]
         [Route("register")]
@@ -17,7 +17,7 @@ namespace AeroFlex.Controllers
             {
                 return BadRequest("Model is invalid");
             }
-            var AdminSuccessRegister = await userRepository.CreateAsync(register);
+            var AdminSuccessRegister = await adminRepository.CreateAsync(register);
             return Ok(AdminSuccessRegister);
         }
 
@@ -26,8 +26,21 @@ namespace AeroFlex.Controllers
         public async Task<ActionResult> FlightOwnerLogin(Login login)
         {
             if (!ModelState.IsValid) return BadRequest("Model is invalid");
-            var AdminSuccessLogin = await userRepository.SignInAsync(login);
+            var AdminSuccessLogin = await adminRepository.SignInAsync(login);
             return Ok(AdminSuccessLogin);
+        }
+
+        [HttpGet("view-cookies")]
+        public IActionResult ViewCookies()
+        {
+            // Get a specific cookie
+            if (Request.Cookies.TryGetValue("AuthToken", out var authToken))
+            {
+                return Ok(new { message = "Cookie Found", token = authToken });
+            }
+
+            // No cookie found
+            return NotFound(new { message = "Cookie not found" });
         }
     }
 }

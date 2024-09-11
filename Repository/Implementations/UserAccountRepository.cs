@@ -4,20 +4,16 @@ using AeroFlex.Helpers;
 using AeroFlex.Models;
 using AeroFlex.Repository.Contracts;
 using AeroFlex.Response;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
 using System.Data;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace AeroFlex.Repository.Implementations
 {
-    public class UserAccountRepository : UserAccountFunctionBase
+    public class UserAccountRepository : UserAccountFunctionBase,IUserAccount
     {
-        public UserAccountRepository(ApplicationDbContext context,IOptions<JwtSection> config) : base(context,config)
+        public UserAccountRepository(ApplicationDbContext context,IOptions<JwtSection> config, IHttpContextAccessor httpContextAccessor) : base(context,config,httpContextAccessor)
         {
             
         }
@@ -26,6 +22,11 @@ namespace AeroFlex.Repository.Implementations
         {
            
                 if (register is null) return new GeneralResponse(false, "Model is invalid");
+
+                using var transaction=await _context.Database.BeginTransactionAsync();
+
+            try
+            {
 
                 var checkUserByEmail = await FindByEmail(register.Email);
                 if (checkUserByEmail is not null)
@@ -57,7 +58,16 @@ namespace AeroFlex.Repository.Implementations
                     RoleId = userRole.RoleId
                 });
 
+
+                await transaction.CommitAsync();
                 return new GeneralResponse(true, "User Registered Successfully");
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                // Log the exception if needed
+                return new GeneralResponse(false, $"Error while registering admin: {ex.Message}");
+            }
 
         }
 
@@ -67,47 +77,62 @@ namespace AeroFlex.Repository.Implementations
         {
             if (login == null) return new LoginResponse(false, "Model is invalid");
 
+            using var transaction = await _context.Database.BeginTransactionAsync();
 
-            var user = await _context.Users
-                      .Include(u => u.RoleMappings)
-                      .ThenInclude(urm => urm.Role)
-                      .FirstOrDefaultAsync(u => u.Email == login.Email || u.UserName == login.Email);
-            if (user == null)
+            try
             {
-                return new LoginResponse(false, "Username or Email doesnot exist");
-            }
-            else if (!BCrypt.Net.BCrypt.Verify(login.Password, user.Password))
-            {
-                return new LoginResponse(false, "Username or Password is invalid");
-            }
-            else
-            {
-                var roleNames = user.RoleMappings.Select(urm => urm.Role.RoleName).ToList();
 
-                string jwtToken = GenerateJwtToken(user, roleNames);
-                string refreshToken = GenerateRefreshToken();
-
-                var refreshTokenInfo = await _context.RefreshTokenInfos.FirstOrDefaultAsync(rt => rt.UserId == user.UserId);
-
-                if (refreshTokenInfo is not null)
+                var user = await _context.Users
+                          .Include(u => u.RoleMappings)
+                          .ThenInclude(urm => urm.Role)
+                          .FirstOrDefaultAsync(u => u.Email == login.Email || u.UserName == login.Email);
+                if (user == null)
                 {
-                    refreshTokenInfo.RefreshToken = refreshToken;
-                    await _context.SaveChangesAsync();
+                    return new LoginResponse(false, "Username or Email doesnot exist");
+                }
+                else if (!BCrypt.Net.BCrypt.Verify(login.Password, user.Password))
+                {
+                    return new LoginResponse(false, "Username or Password is invalid");
                 }
                 else
                 {
-                    await AddToDatabase(new RefreshTokenInfo
-                    {
-                        RefreshToken = refreshToken,
-                        ExpirationTime = DateTime.Now.AddDays(1),
-                        UserId = user.UserId,
-                    });
-                }
+                    var roleNames = user.RoleMappings.Select(urm => urm.Role.RoleName).ToList();
 
-                return new LoginResponse(true, "Login succeffully", jwtToken, refreshToken);
+                    string jwtToken = GenerateJwtToken(user, roleNames);
+                    AppendCookie(jwtToken);
+                    string refreshToken = GenerateRefreshToken();
+
+                    var refreshTokenInfo = await _context.RefreshTokenInfos.FirstOrDefaultAsync(rt => rt.UserId == user.UserId);
+
+                    if (refreshTokenInfo is not null)
+                    {
+                        refreshTokenInfo.RefreshToken = refreshToken;
+                        await _context.SaveChangesAsync();
+                    }
+                    else
+                    {
+                        await AddToDatabase(new RefreshTokenInfo
+                        {
+                            RefreshToken = refreshToken,
+                            ExpirationTime = DateTime.Now.AddDays(1),
+                            UserId = user.UserId,
+                        });
+                    }
+
+                    await transaction.CommitAsync();
+
+                    return new LoginResponse(true, "Login succeffully", jwtToken, refreshToken);
+                }
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                // Log the exception if needed
+                return new LoginResponse(false, $"Error while signing in: {ex.Message}");
             }
 
         }
+
     }
 
 }

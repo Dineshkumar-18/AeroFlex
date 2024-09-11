@@ -11,8 +11,7 @@ namespace AeroFlex.Models
         public int FlightScheduleId { get; set; }
         [Required]
         public decimal BasePrice { get; set; }
-        [Required]
-        public int FlightTaxId { get; set; }
+        public int CountryTaxId { get; set; }
         public decimal? SeasonalMultiplier { get; set; }
         public decimal? DemandMultiplier { get; set; }
         public decimal? Discount {  get; set; }
@@ -21,9 +20,9 @@ namespace AeroFlex.Models
 
         [ForeignKey("FlightScheduleId")]
         public virtual FlightSchedule FlightSchedule { get; set; }
-        [ForeignKey("FlightTaxId")]
-        public virtual FlightTax FlightTax { get; set; }
 
+        [ForeignKey("CountryTaxId")]
+        public virtual CountryTax  CountryTax { get; set; }
         public ICollection<Booking> Bookings { get; set; }
 
     }

@@ -7,7 +7,7 @@ namespace AeroFlex.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class FlightOwnerAccountController(IUserAccount userRepository) : ControllerBase
+    public class FlightOwnerAccountController(IFlightOwnerAccount flightOwnerRepository) : ControllerBase
     {
         [HttpPost]
         [Route("register")]
@@ -17,7 +17,7 @@ namespace AeroFlex.Controllers
             {
                 return BadRequest("Model is invalid");
             }
-            var FlightOwnerSuccessRegister = await userRepository.CreateAsync(register);
+            var FlightOwnerSuccessRegister = await flightOwnerRepository.CreateAsync(register);
             return Ok(FlightOwnerSuccessRegister);
         }
 
@@ -26,7 +26,7 @@ namespace AeroFlex.Controllers
         public async Task<ActionResult> FlightOwnerLogin(Login login)
         {
             if (!ModelState.IsValid) return BadRequest("Model is invalid");
-            var FlightOwnerSuccessLogin = await userRepository.SignInAsync(login);
+            var FlightOwnerSuccessLogin = await flightOwnerRepository.SignInAsync(login);
             return Ok(FlightOwnerSuccessLogin);
         }
     }

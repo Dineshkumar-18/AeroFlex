@@ -4,6 +4,7 @@ using AeroFlex.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AeroFlex.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240911015211_timespanAdd")]
+    partial class timespanAdd
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -276,30 +279,6 @@ namespace AeroFlex.Migrations
                     b.ToTable("Countries");
                 });
 
-            modelBuilder.Entity("AeroFlex.Models.CountryTax", b =>
-                {
-                    b.Property<int>("CountryTaxId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CountryTaxId"));
-
-                    b.Property<int>("CountryId")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("CountryTaxRate")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("TravelType")
-                        .HasColumnType("int");
-
-                    b.HasKey("CountryTaxId");
-
-                    b.HasIndex("CountryId");
-
-                    b.ToTable("CountryTaxes");
-                });
-
             modelBuilder.Entity("AeroFlex.Models.Currency", b =>
                 {
                     b.Property<int>("CurrencyId")
@@ -381,9 +360,6 @@ namespace AeroFlex.Migrations
                     b.Property<decimal>("BasePrice")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<int>("CountryTaxId")
-                        .HasColumnType("int");
-
                     b.Property<decimal?>("DemandMultiplier")
                         .HasColumnType("decimal(18,2)");
 
@@ -391,6 +367,9 @@ namespace AeroFlex.Migrations
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("FlightScheduleId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("FlightTaxId")
                         .HasColumnType("int");
 
                     b.Property<decimal?>("SeasonalMultiplier")
@@ -401,9 +380,9 @@ namespace AeroFlex.Migrations
 
                     b.HasKey("FlightPricingId");
 
-                    b.HasIndex("CountryTaxId");
-
                     b.HasIndex("FlightScheduleId");
+
+                    b.HasIndex("FlightTaxId");
 
                     b.ToTable("FlightsPricings");
                 });
@@ -1088,17 +1067,6 @@ namespace AeroFlex.Migrations
                     b.Navigation("Currency");
                 });
 
-            modelBuilder.Entity("AeroFlex.Models.CountryTax", b =>
-                {
-                    b.HasOne("AeroFlex.Models.Country", "Country")
-                        .WithMany("CountryTax")
-                        .HasForeignKey("CountryId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Country");
-                });
-
             modelBuilder.Entity("AeroFlex.Models.Flight", b =>
                 {
                     b.HasOne("AeroFlex.Models.Airline", "Airline")
@@ -1128,21 +1096,21 @@ namespace AeroFlex.Migrations
 
             modelBuilder.Entity("AeroFlex.Models.FlightPricing", b =>
                 {
-                    b.HasOne("AeroFlex.Models.CountryTax", "CountryTax")
-                        .WithMany()
-                        .HasForeignKey("CountryTaxId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("AeroFlex.Models.FlightSchedule", "FlightSchedule")
                         .WithMany("FlightPricing")
                         .HasForeignKey("FlightScheduleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("CountryTax");
+                    b.HasOne("AeroFlex.Models.FlightTax", "FlightTax")
+                        .WithMany("FlightPricings")
+                        .HasForeignKey("FlightTaxId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("FlightSchedule");
+
+                    b.Navigation("FlightTax");
                 });
 
             modelBuilder.Entity("AeroFlex.Models.FlightSchedule", b =>
@@ -1481,8 +1449,6 @@ namespace AeroFlex.Migrations
                 {
                     b.Navigation("Airports");
 
-                    b.Navigation("CountryTax");
-
                     b.Navigation("FlightTaxes");
                 });
 
@@ -1526,6 +1492,11 @@ namespace AeroFlex.Migrations
                     b.Navigation("SeatTypePricings");
 
                     b.Navigation("Seats");
+                });
+
+            modelBuilder.Entity("AeroFlex.Models.FlightTax", b =>
+                {
+                    b.Navigation("FlightPricings");
                 });
 
             modelBuilder.Entity("AeroFlex.Models.Itinerary", b =>

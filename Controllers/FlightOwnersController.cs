@@ -8,11 +8,13 @@ using Microsoft.EntityFrameworkCore;
 using AeroFlex.Data;
 using AeroFlex.Models;
 using AeroFlex.Dtos;
-using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace AeroFlex.Controllers
 {
     [Route("api/[controller]")]
+    [Authorize(Roles="FlightOwner")]
     [ApiController]
     public class FlightOwnersController : ControllerBase
     {
@@ -140,23 +142,33 @@ namespace AeroFlex.Controllers
         //[Route("addSchedule")]
         //public async Task<ActionResult> AddFlightSchedule(FlightScheduleDTO flightScheduleDTO)
         //{
-        //    //accept from the claim-nameidentifier
-        //    int flightOwnerId = 1;
+        //    var FlightOwnerId = int.Parse(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
+        //    var Role = HttpContext.User.FindFirst(ClaimTypes.Role)?.Value;
 
-        //    var flight=await _context.Flights.Include(f=>f.Airline).Where(f => f.FlightNumber == flightScheduleDTO.FlightNumber && f.Airline.FlightOwnerId == flightOwnerId).FirstOrDefaultAsync();
+        //    if(string.IsNullOrEmpty(FlightOwnerId.ToString()))
+        //    {
+        //        return Unauthorized("FlightOwner claim is missing in the token.");
+        //    }
+
+        //    if (string.IsNullOrEmpty(Role))
+        //    {
+        //        return Forbid("You are not authorized to perform this action.");
+        //    }
+
+        //    var flight = await _context.Flights.Include(f => f.Airline).Where(f => f.FlightNumber == flightScheduleDTO.FlightNumber && f.Airline.FlightOwnerId == FlightOwnerId).ToListAsync();
         //    if (flight == null)
         //    {
-               
+        //        return
         //    }
 
         //    //Getting departureAirport id
-        //    var departureAirportId=await _context.Airports.Where(a=>a.AirportName==flightScheduleDTO.DepartureAirport).FirstOrDefaultAsync();
-        //    if (departureAirportId==null)
+        //    var departureAirportId = await _context.Airports.Where(a => a.AirportName == flightScheduleDTO.DepartureAirport).FirstOrDefaultAsync();
+        //    if (departureAirportId == null)
         //    {
-               
+
         //    }
         //    //Getting arrivalAirport id
-        //    var arrivalAirportId=await _context.Airports.Where(a=>a.AirportName==flightScheduleDTO.ArrivalAirport).FirstOrDefaultAsync();
+        //    var arrivalAirportId = await _context.Airports.Where(a => a.AirportName == flightScheduleDTO.ArrivalAirport).FirstOrDefaultAsync();
         //}
     }
 }

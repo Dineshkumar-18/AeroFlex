@@ -36,6 +36,5 @@ namespace AeroFlex.Models
         [ForeignKey("CurrencyId")]
         public Currency Currency { get; set; }
 
-        public ICollection<FlightPricing> FlightPricings { get; set; }
     }
 }

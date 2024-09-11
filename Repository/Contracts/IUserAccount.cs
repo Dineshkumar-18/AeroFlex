@@ -16,7 +16,7 @@ namespace AeroFlex.Repository.Contracts
         Task<User> FindByEmail(string email);
         Task<User> FindByUserName(string username);
         Task<T> AddToDatabase<T>(T model);
-
         Task<List<T>> AddToDatabaseRange<T>(IEnumerable<T> entities) where T : class;
+        void AppendCookie(string jwtToken);
     }
 }

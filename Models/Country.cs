@@ -19,6 +19,8 @@ namespace AeroFlex.Models
         public virtual Currency Currency { get; set; }
 
         public ICollection<FlightTax> FlightTaxes { get; set; }
+
+        public ICollection<CountryTax> CountryTax { get; set; }
         public ICollection<Airport> Airports { get; set; }
     }
 }

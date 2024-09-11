@@ -39,6 +39,8 @@ namespace AeroFlex.Data
         public DbSet<Ticket> Tickets { get; set; }
 		public DbSet<RefreshTokenInfo> RefreshTokenInfos { get; set; }
 
+		public DbSet<CountryTax> CountryTaxes { get; set; }
+
 
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{
