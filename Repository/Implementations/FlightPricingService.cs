@@ -2,6 +2,7 @@
 using AeroFlex.Dtos;
 using AeroFlex.Models;
 using AeroFlex.Repository.Contracts;
+using AeroFlex.Response;
 using Microsoft.EntityFrameworkCore;
 
 namespace AeroFlex.Repository.Implementations
@@ -13,7 +14,7 @@ namespace AeroFlex.Repository.Implementations
             throw new NotImplementedException();
         }
 
-        public async Task<FlightPricingDto> SetFlightPricingAsync(FlightPricingDto flightPricingDto, FlightSchedule flightSchedule)
+        public async Task<GeneralResponse> SetFlightPricingAsync(FlightPricingDto flightPricingDto, FlightSchedule flightSchedule)
         {
 
             var flight = await context.Flights.Where(f => f.FlightId == flightSchedule.FlightId).FirstOrDefaultAsync();
@@ -26,20 +27,28 @@ namespace AeroFlex.Repository.Implementations
                                  select ctry
                                ).FirstOrDefaultAsync();
 
-            var CountryTax = await context.CountryTaxes.FirstOrDefaultAsync(ct => ct.CountryId == country!.CountryId && ct.TravelType == flightType);
+            if (country == null) return new GeneralResponse(false,"country not found");
+
+            var Countrytax = await context.CountryTaxes.FirstOrDefaultAsync(ct => ct.CountryId == country!.CountryId && ct.TravelType == flightType);
+
+            if (Countrytax == null) return new GeneralResponse(false,"Country tax not found");
 
 
             var flightPricing = new FlightPricing
             {
                 FlightScheduleId = flightSchedule.FlightScheduleId,
+                CountryTaxId=Countrytax!.CountryTaxId,
                 BasePrice = flightPricingDto.BasePrice,
                 DemandMultiplier = flightPricingDto.DemandMultiplier,
                 SeasonalMultiplier = flightPricingDto.SeasonalMultiplier,
-                Totalprice = CalculateTotalPrice(flightSchedule)
+                Totalprice = CalculateTotalPrice(flightPricingDto)
             };
 
+            context.FlightsPricings.Add(flightPricing);
+            await context.SaveChangesAsync();
 
-            throw new NotImplementedException();
+            return new GeneralResponse(true,"Flight pricing set successfully");
+
         }
 
         public Task<FlightPricingDto> UpdateFlightPricingAsync(FlightPricingDto flightPricingDto)

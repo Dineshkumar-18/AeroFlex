@@ -33,6 +33,8 @@ namespace AeroFlex.Models
 
         [ForeignKey("ClassId")]
         public Class FlightClass { get; set; }
+
+        public ICollection<FlightScheduleClass> FlightScheduleClasses { get; set; }
         [ForeignKey("CurrencyId")]
         public Currency Currency { get; set; }
 

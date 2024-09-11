@@ -1,5 +1,6 @@
 ﻿using AeroFlex.Dtos;
 using AeroFlex.Repository.Contracts;
+using AeroFlex.Repository.Implementations;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -42,5 +43,6 @@ namespace AeroFlex.Controllers
             // No cookie found
             return NotFound(new { message = "Cookie not found" });
         }
+
     }
 }

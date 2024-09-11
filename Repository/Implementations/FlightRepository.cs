@@ -81,7 +81,7 @@ namespace AeroFlex.Repository.Implementations
                 {
                     FlightNumber = addFlight.FlightNumber,
                     AirCraftType = addFlight.AirCraftType,
-                    FlightType = (FlightType)Enum.Parse(typeof(FlightType), addFlight.FlightType.ToUpper()),
+                    FlightType = (TravelType)Enum.Parse(typeof(TravelType), addFlight.FlightType.ToUpper()),
                     DepartureAirportId=DepartAirport.AirportId,
                     ArrivalAirportId=ArrivalAirport.AirportId,
                     TotalSeats=addFlight.TotalSeats,

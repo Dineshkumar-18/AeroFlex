@@ -4,6 +4,7 @@ using AeroFlex.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AeroFlex.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240911063040_updatedClass")]
+    partial class updatedClass
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -471,12 +474,6 @@ namespace AeroFlex.Migrations
                     b.Property<int>("FlightScheduleId")
                         .HasColumnType("int");
 
-                    b.Property<int>("FlightTaxId")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("TotalPrice")
-                        .HasColumnType("decimal(18,2)");
-
                     b.Property<int>("TotalSeats")
                         .HasColumnType("int");
 
@@ -485,8 +482,6 @@ namespace AeroFlex.Migrations
                     b.HasIndex("ClassId");
 
                     b.HasIndex("FlightScheduleId");
-
-                    b.HasIndex("FlightTaxId");
 
                     b.ToTable("FlightScheduleClasses");
                 });
@@ -502,14 +497,13 @@ namespace AeroFlex.Migrations
                     b.Property<int>("FlightScheduleId")
                         .HasColumnType("int");
 
-                    b.Property<bool?>("IsStop")
-                        .IsRequired()
+                    b.Property<bool>("IsStop")
                         .HasColumnType("bit");
 
-                    b.Property<int?>("ItineraryId")
+                    b.Property<int>("ItineraryId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("StopOrder")
+                    b.Property<int>("StopOrder")
                         .HasColumnType("int");
 
                     b.HasKey("FlightSegmentId");
@@ -1196,17 +1190,9 @@ namespace AeroFlex.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("AeroFlex.Models.FlightTax", "FlightTax")
-                        .WithMany("FlightScheduleClasses")
-                        .HasForeignKey("FlightTaxId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.Navigation("Class");
 
                     b.Navigation("FlightSchedule");
-
-                    b.Navigation("FlightTax");
                 });
 
             modelBuilder.Entity("AeroFlex.Models.FlightSegment", b =>
@@ -1219,7 +1205,9 @@ namespace AeroFlex.Migrations
 
                     b.HasOne("AeroFlex.Models.Itinerary", "Itinerary")
                         .WithMany("FlightSegments")
-                        .HasForeignKey("ItineraryId");
+                        .HasForeignKey("ItineraryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("FlightSchedule");
 
@@ -1552,11 +1540,6 @@ namespace AeroFlex.Migrations
                     b.Navigation("SeatTypePricings");
 
                     b.Navigation("Seats");
-                });
-
-            modelBuilder.Entity("AeroFlex.Models.FlightTax", b =>
-                {
-                    b.Navigation("FlightScheduleClasses");
                 });
 
             modelBuilder.Entity("AeroFlex.Models.Itinerary", b =>

@@ -87,6 +87,14 @@ namespace AeroFlex.Controllers
             }
         }
 
+        //[HttpPost]
+        //[Route("setFlightPricing")]
+        //public async Task<ActionResult> SetFlightPricing(FlightPricingDto flightPricingDto)
+        //{
+
+        //}
+
+
 
     }
 }

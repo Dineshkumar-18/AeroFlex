@@ -7,14 +7,13 @@ namespace AeroFlex.Models
     {
         [Key]
         public int FlightSegmentId { get; set; }
-        [Required]
-        public int ItineraryId { get; set; }
+
+        public int? ItineraryId { get; set; }
         [Required]
         public int FlightScheduleId { get; set; }
+        public int? StopOrder { get; set; }
         [Required]
-        public int StopOrder { get; set; }
-        [Required]
-        public bool IsStop { get; set; }
+        public bool? IsStop { get; set; }
 
         [ForeignKey("ItineraryId")]
         public virtual Itinerary Itinerary { get; set; }

@@ -4,6 +4,7 @@ using AeroFlex.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AeroFlex.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240911091932_updatedsomecontent")]
+    partial class updatedsomecontent
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -502,14 +505,13 @@ namespace AeroFlex.Migrations
                     b.Property<int>("FlightScheduleId")
                         .HasColumnType("int");
 
-                    b.Property<bool?>("IsStop")
-                        .IsRequired()
+                    b.Property<bool>("IsStop")
                         .HasColumnType("bit");
 
-                    b.Property<int?>("ItineraryId")
+                    b.Property<int>("ItineraryId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("StopOrder")
+                    b.Property<int>("StopOrder")
                         .HasColumnType("int");
 
                     b.HasKey("FlightSegmentId");
@@ -1219,7 +1221,9 @@ namespace AeroFlex.Migrations
 
                     b.HasOne("AeroFlex.Models.Itinerary", "Itinerary")
                         .WithMany("FlightSegments")
-                        .HasForeignKey("ItineraryId");
+                        .HasForeignKey("ItineraryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("FlightSchedule");
 
