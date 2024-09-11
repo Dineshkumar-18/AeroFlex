@@ -43,6 +43,8 @@ namespace AeroFlex.Models
 
         public virtual  Seat Seat { get; set; }
 
-        public virtual CancellationInfo CancellationInfo { get; set; }  
+        public virtual CancellationInfo CancellationInfo { get; set; }
+
+        public virtual Baggage? Baggage { get; set; }
     }
 }

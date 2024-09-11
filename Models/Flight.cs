@@ -41,5 +41,7 @@ namespace AeroFlex.Models
 		[ForeignKey("ArrivalAirportId")]
 		public virtual Airport ArrivalAirport { get; set; }
 
-	}
+        public ICollection<Baggage> Baggages { get; set; }
+
+    }
 }

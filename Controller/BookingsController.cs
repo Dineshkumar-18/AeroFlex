@@ -254,6 +254,58 @@ namespace AeroFlex.Controller
             return Ok(bookingHistory);
         }
 
+        //Cancellation deadline
+
+        [HttpPost("cancelwithdeadline/{id}")]
+        public async Task<ActionResult> CancelBookingWithDeadline(int id)
+        {
+            var booking = await _context.Bookings
+                .Include(b => b.FlightSchedule)
+                .FirstOrDefaultAsync(b => b.BookingId == id);
+
+            if (booking == null)
+            {
+                return NotFound("Booking not found.");
+            }
+
+            var flightSchedule = booking.FlightSchedule;
+            var timeUntilDeparture = flightSchedule.DepartureTime - DateTime.UtcNow;
+
+            if (timeUntilDeparture.TotalHours < 24) // Assume 24 hours as the cancellation deadline
+            {
+                return BadRequest("Cancellations are only allowed more than 24 hours before the flight.");
+            }
+
+            booking.BookingStatus = Bookingstatus.CANCELLED;
+            _context.Entry(booking).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
+
+            return Ok("Booking cancelled before the deadline.");
+        }
+
+        // GET: api/Bookings/daterange
+        [HttpGet("daterange")]
+        public async Task<ActionResult<IEnumerable<Booking>>> GetBookingsByDateRange(DateTime startDate, DateTime endDate)
+        {
+            var bookings = await _context.Bookings
+                .Where(b => b.BookingDate >= startDate && b.BookingDate <= endDate)
+                .ToListAsync();
+
+            if (!bookings.Any())
+            {
+                return NotFound("No bookings found within the specified date range.");
+            }
+
+            return Ok(bookings);
+        }
+
+
+
+
+
+
+
+
 
 
 
