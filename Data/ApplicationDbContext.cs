@@ -37,6 +37,7 @@ namespace AeroFlex.Data
         public DbSet<Seat> Seats { get; set; }
 		public DbSet<SeatTypePricing> SeatTypePricings { get; set; }
         public DbSet<Ticket> Tickets { get; set; }
+		public DbSet<Baggage> Baggages { get; set; }
 
 
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
