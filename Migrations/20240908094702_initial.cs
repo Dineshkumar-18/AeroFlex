@@ -452,7 +452,12 @@ namespace AeroFlex.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     FlightScheduleId = table.Column<int>(type: "int", nullable: false),
                     BasePrice = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    FlightTaxId = table.Column<int>(type: "int", nullable: false),
+                    
+                    
+                    
+                    
+                    
+                    Id = table.Column<int>(type: "int", nullable: false),
                     SeasonalMultiplier = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
                     DemandMultiplier = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
                     Discount = table.Column<decimal>(type: "decimal(18,2)", nullable: true),

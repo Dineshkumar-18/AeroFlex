@@ -16,6 +16,9 @@ namespace AeroFlex.Models
         [Required]
         [MaxLength(30)]
         public string AirCraftType { get; set; }
+
+        [Required]
+        public int TotalSeatColumn { get; set; }
         [Required]
         public TravelType FlightType { get; set; }
         [Required]

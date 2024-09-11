@@ -14,7 +14,7 @@ namespace AeroFlex.Controllers
     [Route("api/[controller]")]
     [Authorize(Roles = "FlightOwner")]
     [ApiController]
-    public class FlightController(IFlight flightRepository,ApplicationDbContext context) : ControllerBase
+    public class FlightController(IFlight flightRepository,ApplicationDbContext context,IFlightPricingService flightPricing,ISeatService seatService) : ControllerBase
     {
         [HttpPost]
         [Route("add")]
@@ -86,14 +86,79 @@ namespace AeroFlex.Controllers
                 return Forbid();
             }
         }
+        [HttpPost]
+        [Route("add-pricing/{flightScheduleId}")]
+        public async Task<ActionResult> SetFlightPricing(int flightScheduleId,FlightPricingDto flightPricingDto)
+        {
+            if (!ModelState.IsValid) return BadRequest("Model is invalid");
+            var schedule = await context.FlightsSchedules.FindAsync(flightScheduleId);
+            if (schedule == null || schedule.FlightStatus.ToString().ToLower() != "scheduling_process")
+            {
+                return BadRequest("Invalid flight schedule.");
+            }
 
-        //[HttpPost]
-        //[Route("setFlightPricing")]
-        //public async Task<ActionResult> SetFlightPricing(FlightPricingDto flightPricingDto)
-        //{
+            var response=await flightPricing.SetFlightPricingAsync(flightPricingDto, schedule);
 
-        //}
+            if(!response.flag) StatusCode(StatusCodes.Status500InternalServerError, response.message);
 
+            return Ok(response);
+        }
+
+        [HttpPost]
+        [Route("add-class-pricing/{flightScheduleId}")]
+        public async Task<ActionResult> SetFlightScheduleClassPricing(int flightScheduleId, List<ClassPricingDto> classPricingDtos)
+        {
+            if (!ModelState.IsValid) return BadRequest("Model is invalid");
+            var schedule = await context.FlightsSchedules.FindAsync(flightScheduleId);
+
+            if (schedule == null || schedule.FlightStatus.ToString().ToLower() != "scheduling_process")
+            {
+                return BadRequest("Invalid flight schedule.");
+            }
+
+            var response = await seatService.SetClassPricing(classPricingDtos, flightScheduleId);
+
+            if (!response.flag) StatusCode(StatusCodes.Status500InternalServerError, response.message);
+
+            return Ok(response);
+        }
+
+
+        [HttpPost]
+        [Route("add-classType-pricing/{flightScheduleId}")]
+        public async Task<ActionResult> SetFlightScheduleClassTypePricing(int flightScheduleId, List<SeatTypePriceDto> seatTypePricing)
+        {
+            if (!ModelState.IsValid) return BadRequest("Model is invalid");
+            var schedule = await context.FlightsSchedules.FindAsync(flightScheduleId);
+
+            if (schedule == null || schedule.FlightStatus.ToString().ToLower() != "scheduling_process")
+            {
+                return BadRequest("Invalid flight schedule.");
+            }
+            var response = await seatService.SetSeatTypePricing(seatTypePricing, flightScheduleId);
+
+            if (!response.flag) StatusCode(StatusCodes.Status500InternalServerError, response.message);
+
+            return Ok(response);
+        }
+
+        [HttpPost]
+        [Route("add-seat-pricing/{flightScheduleId}")]
+        public async Task<ActionResult> SetSeatPricing(int flightScheduleId, List<SeatDto> seatDto)
+        {
+            if (!ModelState.IsValid) return BadRequest("Model is invalid");
+            var schedule = await context.FlightsSchedules.FindAsync(flightScheduleId);
+
+            if (schedule == null || schedule.FlightStatus.ToString().ToLower() != "scheduling_process")
+            {
+                return BadRequest("Invalid flight schedule.");
+            }
+            var response = await seatService.AddSeatPricing(seatDto, flightScheduleId);
+
+            if (!response.flag) StatusCode(StatusCodes.Status500InternalServerError, response.message);
+
+            return Ok(response);
+        }
 
 
     }

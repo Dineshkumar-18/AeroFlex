@@ -18,7 +18,7 @@ namespace AeroFlex.Repository.Implementations
         {
 
             var flight = await context.Flights.Where(f => f.FlightId == flightSchedule.FlightId).FirstOrDefaultAsync();
-            var flightType = flight.FlightType;
+            var flightType = flight!.FlightType;
 
             var country = await (from airport in context.Airports
                                  join ctry in context.Countries

@@ -5,10 +5,11 @@ namespace AeroFlex.Models
 {
     public enum Bookingstatus
     {
-         CONFIRMED=1,
-         PARTIALLY_CANCELLED=2,
-         CANCELLED=3,
-         REFUNDED=4
+         PENDING=1,
+         CONFIRMED=2,
+         PARTIALLY_CANCELLED=3,
+         CANCELLED=4,
+         REFUNDED=5
     }
     public class Booking
     {

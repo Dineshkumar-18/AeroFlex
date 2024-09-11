@@ -47,8 +47,6 @@ namespace AeroFlex.Models
         public ICollection<Booking> Bookings { get; set; }
         public ICollection<FlightScheduleClass> FlightScheduleClasses { get; set; }
 
-
-
         [ForeignKey("FlightId")]
         public virtual Flight Flight { get; set; }
 

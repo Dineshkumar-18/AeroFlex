@@ -24,6 +24,10 @@ builder.Services.AddScoped<IUserAccount,UserAccountRepository>();
 builder.Services.AddScoped<IFlightOwnerAccount, FlightOwnerAccountRepository>();
 builder.Services.AddScoped<IAdminAccount, AdminAcccountRepository>();
 builder.Services.AddScoped<IFlight, FlightRepository>();
+builder.Services.AddScoped<IBookingService,BookingServicecs>();
+builder.Services.AddScoped<ISeatService, SeatService>();
+builder.Services.AddScoped<IFlightPricingService,FlightPricingService>();
+
 builder.Services.Configure<JwtSection>(builder.Configuration.GetSection("JwtSection"));
 
 builder.Services.AddHttpContextAccessor();

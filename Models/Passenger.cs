@@ -33,7 +33,6 @@ namespace AeroFlex.Models
         public DateOnly DateOfBirth { get; set; }
         [Required]
         public PassengerType PassengerType { get; set; }
-
         public PassengerStatus PassengerStatus { get; set; }
 
         [ForeignKey("BookingId")]
