@@ -23,9 +23,6 @@ namespace AeroFlex.Models
 		public ICollection<Flight> Departures { get; set; }
 		public ICollection<Flight> Arrivals { get; set; }
 
-		public ICollection<Itinerary> StartJourney {  get; set; }
-        public ICollection<Itinerary> EndJourney { get; set; }
-
 		public ICollection<FlightSchedule> ScheduleDepartures { get; set; }
 		public ICollection<FlightSchedule> ScheduleArrivals { get; set; }
 

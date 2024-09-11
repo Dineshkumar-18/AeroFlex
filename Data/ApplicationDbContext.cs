@@ -27,8 +27,6 @@ namespace AeroFlex.Data
         public DbSet<FlightScheduleClass> FlightScheduleClasses { get; set; }
         public DbSet<FlightSchedule> FlightsSchedules { get; set; }
         public DbSet<FlightTax> FlightTaxes { get; set; }
-        public DbSet<FlightSegment> FlightSegments { get; set; }
-        public DbSet<Itinerary> Itineraries { get; set; }
         public DbSet<Passenger> Passengers { get; set; }    
         public DbSet<Payment> Payments { get; set; }
         public DbSet<Refund> Refunds { get; set; }
@@ -184,22 +182,6 @@ namespace AeroFlex.Data
 				.HasForeignKey(fs => fs.FlightId)
 				.OnDelete(DeleteBehavior.Restrict);
 
-
-			//Itinerary to Start airport relationship
-
-			modelBuilder.Entity<Itinerary>()
-				.HasOne(i => i.StartAirport)
-				.WithMany(a => a.StartJourney)
-				.HasForeignKey(fs => fs.StartAirportId)
-				.OnDelete(DeleteBehavior.Restrict);
-
-			//Itinerary to End airport relationship
-
-			modelBuilder.Entity<Itinerary>()
-				.HasOne(i => i.EndAirport)
-				.WithMany(a => a.EndJourney)
-				.HasForeignKey(fs => fs.EndAirportId)
-				.OnDelete(DeleteBehavior.Restrict);
 
 			//FlightTax model 
 			modelBuilder.Entity<FlightTax>(entity =>
