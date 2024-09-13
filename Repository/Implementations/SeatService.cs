@@ -6,7 +6,6 @@ using AeroFlex.Repository.Contracts;
 using AeroFlex.Response;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
-using SimplyFly.Models;
 
 namespace AeroFlex.Repository.Implementations
 {
@@ -161,7 +160,7 @@ namespace AeroFlex.Repository.Implementations
                 if (FlightTax == null)
                     return new GeneralResponse(false, $"Tax information not found for class '{classPricingDto.ClassName}'");
 
-                var totalPrice = classPricingDto.BasePrice + (classPricingDto.BasePrice * FlightTax.TaxRate);
+                var totalPrice = classPricingDto.BasePrice + ((classPricingDto.BasePrice * FlightTax.TaxRate)/100);
 
                 var AddFlightScheduleClass = new FlightScheduleClass
                 {

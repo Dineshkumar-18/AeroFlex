@@ -91,7 +91,7 @@ namespace AeroFlex.Controllers
         public async Task<ActionResult> SetFlightPricing(int flightScheduleId,FlightPricingDto flightPricingDto)
         {
             if (!ModelState.IsValid) return BadRequest("Model is invalid");
-            var schedule = await context.FlightsSchedules.FindAsync(flightScheduleId);
+            var schedule = await context.FlightsSchedules.FirstOrDefaultAsync(fs=>fs.FlightScheduleId== flightScheduleId);
             if (schedule == null || schedule.FlightStatus.ToString().ToLower() != "scheduling_process")
             {
                 return BadRequest("Invalid flight schedule.");
@@ -159,6 +159,7 @@ namespace AeroFlex.Controllers
 
             return Ok(response);
         }
+
 
 
     }

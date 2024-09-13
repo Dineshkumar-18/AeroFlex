@@ -18,13 +18,7 @@ namespace AeroFlex.Models
         [Required]
         public int ClassId { get; set; }
         [Required]
-        [MaxLength(100)]
-        public string TaxType { get; set; }
-        [Required]
         public decimal TaxRate { get; set; }
-
-        [Required]
-        public int CurrencyId { get; set; }
 
         public TravelType TravelType { get; set; }
 
@@ -35,7 +29,6 @@ namespace AeroFlex.Models
         public Class FlightClass { get; set; }
 
         public ICollection<FlightScheduleClass> FlightScheduleClasses { get; set; }
-        [ForeignKey("CurrencyId")]
-        public Currency Currency { get; set; }
+      
     }
 }

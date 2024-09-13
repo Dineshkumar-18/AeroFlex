@@ -17,7 +17,7 @@ namespace AeroFlex.Models
         [Required]
         public int CancellationFeeId { get; set; }
         [Required]
-        public int RefundAmount { get; set; }
+        public decimal RefundAmount { get; set; }
         [Required]
         public DateTime CancelledTime { get; set; }
         [ForeignKey("FlightScheduleId")]

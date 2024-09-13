@@ -24,7 +24,7 @@ namespace AeroFlex.Models
         [Required]
         public int ReferenceId { get; set; }
         [Required]
-        public int PaidAmount { get; set; }
+        public decimal PaidAmount { get; set; }
         public int? BalanceAmount { get; set; }
         [Required]
         public DateTime PaymentDate { get; set; }

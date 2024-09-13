@@ -7,15 +7,15 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AeroFlex.Repository.Implementations
 {
-    public class BookingServicecs(ApplicationDbContext _context) : IBookingService
+    public class BookingService(ApplicationDbContext _context) : IBookingService
     {
-       public async Task<GeneralResponse> CreateBookingAsync(BookingDto bookingDTO, int UserId)
+       public async Task<GeneralResponse> CreateBookingAsync(BookingDto bookingDTO, int UserId,int FlightScheduleId)
         {
             using (var transaction = await _context.Database.BeginTransactionAsync())
             {
                 try
                 {
-                    var flightPricing = await _context.FlightsPricings.FirstOrDefaultAsync(fp=>fp.FlightScheduleId==bookingDTO.FlightSchedleId);
+                    var flightPricing = await _context.FlightsPricings.FirstOrDefaultAsync(fp=>fp.FlightScheduleId== FlightScheduleId);
 
                     decimal totalPrice = 0m;
 
@@ -37,9 +37,9 @@ namespace AeroFlex.Repository.Implementations
                     var booking = new Booking
                     {
                         UserId = UserId,
-                        FlightScheduleId = bookingDTO.FlightSchedleId,
+                        FlightScheduleId =FlightScheduleId,
                         TotalPassengers = bookingDTO.SeatAllocations.Count(),
-                        BookingDate = bookingDTO.BookindDate,
+                        BookingDate = DateTime.UtcNow,
                         FlightPricingId = flightPricing!.FlightPricingId,
                         TotalAmount = totalPrice+flightPricing.Totalprice,
                         BookingStatus = Bookingstatus.PENDING,

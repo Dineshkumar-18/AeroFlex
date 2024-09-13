@@ -7,7 +7,7 @@ namespace AeroFlex.Repository.Contracts
 {
     public interface IBookingService
     {
-        Task<GeneralResponse> CreateBookingAsync(BookingDto bookingDTO, int UserId);
+        Task<GeneralResponse> CreateBookingAsync(BookingDto bookingDTO, int UserId,int FlightScheduleId);
         Task<Booking> GetBookingByIdAsync(int bookingId);
         Task<List<Booking>> GetUserBookingsAsync(int userId);
 

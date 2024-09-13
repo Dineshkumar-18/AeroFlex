@@ -24,9 +24,18 @@ builder.Services.AddScoped<IUserAccount,UserAccountRepository>();
 builder.Services.AddScoped<IFlightOwnerAccount, FlightOwnerAccountRepository>();
 builder.Services.AddScoped<IAdminAccount, AdminAcccountRepository>();
 builder.Services.AddScoped<IFlight, FlightRepository>();
-builder.Services.AddScoped<IBookingService,BookingServicecs>();
+builder.Services.AddScoped<IBookingService,BookingService>();
 builder.Services.AddScoped<ISeatService, SeatService>();
 builder.Services.AddScoped<IFlightPricingService,FlightPricingService>();
+
+
+builder.Services.AddScoped<IFlightTaxRepository, FlightTaxRepository>();
+builder.Services.AddScoped<IClassRepository, ClassRepository>();
+builder.Services.AddScoped<ICountryRepository, CountryRepository>();
+builder.Services.AddScoped<IAirlineRepository, AirlineRepository>();
+builder.Services.AddScoped<ICurrencyRepository, CurrencyRepository>();
+builder.Services.AddScoped<IPaymentRepository,PaymentRepository>();
+builder.Services.AddScoped<ICountryTaxService, CountryTaxService>();
 
 builder.Services.Configure<JwtSection>(builder.Configuration.GetSection("JwtSection"));
 

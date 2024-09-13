@@ -154,10 +154,6 @@ namespace AeroFlex.Data
 				.WithMany(fc => fc.FlightTaxes)
 				.HasForeignKey(ft => ft.ClassId);
 
-			modelBuilder.Entity<FlightTax>()
-				.HasOne(ft => ft.Currency)
-				.WithMany(c => c.FlightTaxes)
-				.HasForeignKey(ft => ft.CurrencyId);
 
 
 
@@ -205,10 +201,7 @@ namespace AeroFlex.Data
 				.HasForeignKey(ft => ft.ClassId)
 				.OnDelete(DeleteBehavior.Restrict);
 
-				entity.HasOne(ft => ft.Currency)
-				.WithMany(c => c.FlightTaxes)
-				.HasForeignKey(ft => ft.CurrencyId)
-				.OnDelete(DeleteBehavior.Restrict);
+
 
 			});
 

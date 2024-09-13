@@ -466,12 +466,7 @@ namespace AeroFlex.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_FlightsPricings", x => x.FlightPricingId);
-                    table.ForeignKey(
-                        name: "FK_FlightsPricings_FlightTaxes_FlightTaxId",
-                        column: x => x.FlightTaxId,
-                        principalTable: "FlightTaxes",
-                        principalColumn: "FlightTaxId",
-                        onDelete: ReferentialAction.Cascade);
+                   
                     table.ForeignKey(
                         name: "FK_FlightsPricings_FlightsSchedules_FlightScheduleId",
                         column: x => x.FlightScheduleId,
