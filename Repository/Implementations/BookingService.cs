@@ -38,7 +38,7 @@ namespace AeroFlex.Repository.Implementations
                     {
                         UserId = UserId,
                         FlightScheduleId =FlightScheduleId,
-                        TotalPassengers = bookingDTO.SeatAllocations.Count(),
+                        TotalPassengers = bookingDTO.SeatAllocations.Count,
                         BookingDate = DateTime.UtcNow,
                         FlightPricingId = flightPricing!.FlightPricingId,
                         TotalAmount = totalPrice+flightPricing.Totalprice,
@@ -81,10 +81,9 @@ namespace AeroFlex.Repository.Implementations
                             seat.PassengerId=Passenger.PassengerId;
 
                             _context.Seats.Update(seat);
+                            await _context.SaveChangesAsync();
                         }
                     }
-
-                    await _context.SaveChangesAsync();
                     await transaction.CommitAsync();
                     return new GeneralResponse(true, "Booked successfully");
                 }

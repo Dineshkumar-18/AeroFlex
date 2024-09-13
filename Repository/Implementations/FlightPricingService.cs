@@ -33,6 +33,7 @@ namespace AeroFlex.Repository.Implementations
 
             if (Countrytax == null) return new GeneralResponse(false,"Country tax not found");
 
+            if (flightPricingDto.SeasonalMultiplier <= 0 || flightPricingDto.DemandMultiplier <= 0) return new GeneralResponse(false, "Multiplier like seasonal,demand should be greater than 0");
 
             var flightPricing = new FlightPricing
             {

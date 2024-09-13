@@ -46,7 +46,6 @@ namespace AeroFlex.Controllers
             if (!flight.flag) { return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Couldn't create the flight" }); }
 
 
-
             return Ok(flight);
         }
 
