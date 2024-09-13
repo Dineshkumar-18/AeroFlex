@@ -23,12 +23,14 @@ namespace AeroFlex.Repository.Implementations
                 return Enumerable.Empty<FlightScheduleDTO>();
             }
 
+            // Retrieve FlightSchedules with date comparison only on the Date part
             return await context.FlightsSchedules
                 .Include(fs => fs.Flight)
                 .Include(fs => fs.DepartureAirport)
                 .Include(fs => fs.ArrivalAirport)
                 .Where(fs => fs.DepartureAirportId == departureAirportId.AirportId
                           && fs.ArrivalAirportId == arrivalAirportId.AirportId
+                          && fs.FlightStatus==FlightStatus.SCHEDULED
                           && EF.Functions.DateDiffDay(fs.DepartureTime, date) == 0) // Date comparison
                 .Select(fs => new FlightScheduleDTO
                 {
@@ -37,8 +39,7 @@ namespace AeroFlex.Repository.Implementations
                     ArrivalAirport = fs.ArrivalAirport.AirportName,
                     DepartTime = fs.DepartureTime,
                     ArrivalTime = fs.ArrivalTime
-                })
-                .ToListAsync();
+                }).ToListAsync();
         }
     }
 }

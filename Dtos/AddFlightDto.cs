@@ -17,6 +17,8 @@ namespace AeroFlex.Dtos
         public string ArrivalAirport { get; set; }
         [Required]
         public int TotalSeats { get; set; }
+        [Required]
+        public int TotalSeatColumn { get; set; }
 
     }
 }

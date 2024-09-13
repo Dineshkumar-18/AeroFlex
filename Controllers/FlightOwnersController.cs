@@ -19,7 +19,6 @@ namespace AeroFlex.Controllers
     public class FlightOwnersController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
-
         public FlightOwnersController(ApplicationDbContext context)
         {
             _context = context;
@@ -107,6 +106,34 @@ namespace AeroFlex.Controllers
         private bool FlightOwnerExists(int id)
         {
             return _context.FlightOwners.Any(e => e.UserId == id);
+        }
+
+        [HttpPut]
+        [Route("profileCompletion/{flightOwnerId}")]
+        public async Task<ActionResult> ProfileCompletion(int flightOwnerId,FlightOwnerProfile profile)
+        {
+            var flightowner = await _context.FlightOwners.FirstOrDefaultAsync(fo => fo.UserId == flightOwnerId);
+            if (flightowner == null) return BadRequest("FlightOwner Not found");
+
+            if(flightowner.IsApproved)
+            {
+                return BadRequest("Your profile is already approved by admin you can schedule your flights");
+            }
+
+            if(!flightowner.IsApproved && !flightowner.IsProfileCompleted)
+            {
+                flightowner.CompanyName = profile.CompanyName;
+                flightowner.CompanyRegistrationNumber= profile.CompanyRegistrationNumber;
+                flightowner.CompanyEmail = profile.CompanyEmail;
+                flightowner.CompanyPhoneNumber = profile.CompanyPhoneNumber;
+                flightowner.OperatingLicenseNumber= profile.OperatingLicenseNumber;
+                flightowner.IsProfileCompleted = true;
+                _context.FlightOwners.Update(flightowner);
+                await _context.SaveChangesAsync();
+                return Ok("Profile updated successfully! it is under review of admin");
+            }
+            return BadRequest("Your profile is waiting for admin approval");
+
         }
 
 

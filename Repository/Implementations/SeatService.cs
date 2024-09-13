@@ -71,6 +71,7 @@ namespace AeroFlex.Repository.Implementations
                     var seat = new Seat
                     {
                         SeatNumber = $"{row}{seatLabel}",
+                        FlightScheduleId=flightScheduleId,
                         FlightScheduleClassId = flightScheduleClass.FlightclassId,
                         SeatTypePricingId = seatTypePricing.SeatTypePricingId,
                         SeatPrice = seatTypePricing.TotalPriceByClassAndType
@@ -168,7 +169,8 @@ namespace AeroFlex.Repository.Implementations
                     ClassId = flightClass.ClassId,
                     BasePrice = classPricingDto.BasePrice,
                     TotalPrice = totalPrice,
-                    TotalSeats = classPricingDto.TotalSeats
+                    TotalSeats = classPricingDto.TotalSeats,
+                    FlightTaxId=FlightTax.FlightTaxId
                 };
 
                 context.Add(AddFlightScheduleClass);
@@ -182,12 +184,11 @@ namespace AeroFlex.Repository.Implementations
         {
             if (seatTypePriceDtos == null || !seatTypePriceDtos.Any())
                 return new GeneralResponse(false, "Model is invalid");
+                FlightScheduleClass? FlightScheduleClass = null;
 
             for (int i = 0; i < seatTypePriceDtos.Count; i++)
             {
                 var seatTypePriceDto = seatTypePriceDtos[i];
-
-                FlightScheduleClass? FlightScheduleClass = null;
 
                 if (i % 3 == 0)
                 {
@@ -204,7 +205,7 @@ namespace AeroFlex.Repository.Implementations
                 var Seattypepricing = new SeatTypePricing
                 {
                     FlightScheduleId = FlightScheduleId,
-                    FlightScheduleClassId = FlightScheduleClass.ClassId,
+                    FlightScheduleClassId = FlightScheduleClass.FlightclassId,
                     SeatTypeName = (SeatType)Enum.Parse(typeof(SeatType), seatTypePriceDto.SeatType.ToUpper()),
                     SeatPriceByType = seatTypePriceDto.SeatTypePrice,
                     TotalPriceByClassAndType = (FlightScheduleClass.TotalPrice + seatTypePriceDto.SeatTypePrice)

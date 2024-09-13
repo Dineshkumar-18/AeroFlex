@@ -20,11 +20,11 @@ namespace AeroFlex.Models
         [Required]
         [MaxLength(30)]
         public string TimeZone { get; set; }
-		public ICollection<Flight> Departures { get; set; }
-		public ICollection<Flight> Arrivals { get; set; }
+		public ICollection<Flight> Departures { get; set; } = new List<Flight>();
+		public ICollection<Flight> Arrivals { get; set; } = new List<Flight>();
 
-		public ICollection<FlightSchedule> ScheduleDepartures { get; set; }
-		public ICollection<FlightSchedule> ScheduleArrivals { get; set; }
+        public ICollection<FlightSchedule> ScheduleDepartures { get; set; } = new List<FlightSchedule>();
+		public ICollection<FlightSchedule> ScheduleArrivals { get; set; }= new List<FlightSchedule>();      
 
         [ForeignKey("CountryId")]
         public virtual Country Country { get; set; }

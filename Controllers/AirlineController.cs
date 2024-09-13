@@ -1,8 +1,10 @@
-﻿using AeroFlex.Dtos;
+﻿using AeroFlex.Data;
+using AeroFlex.Dtos;
 using AeroFlex.Models;
 using AeroFlex.Repository.Contracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
 namespace AeroFlex.Controllers
@@ -10,15 +12,8 @@ namespace AeroFlex.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
-    public class AirlinesController : ControllerBase
+    public class AirlinesController(IAirlineRepository _airlineRepository,ApplicationDbContext _context) : ControllerBase
     {
-        private readonly IAirlineRepository _airlineRepository;
-        private readonly IHttpContextAccessor _httpContextAccessor;
-
-        public AirlinesController(IAirlineRepository airlineRepository)
-        {
-            _airlineRepository = airlineRepository;
-        }
 
         // GET: api/Airlines
         [HttpGet]
@@ -72,6 +67,8 @@ namespace AeroFlex.Controllers
             {
                 return Unauthorized();
             }
+            var flightOwner = await _context.FlightOwners.FirstOrDefaultAsync(fo => fo.UserId == flightOwnerId);
+            if (!flightOwner.IsApproved) return BadRequest("You are required to get approval from the admin");
 
             var airline = new Airline
             {
@@ -81,7 +78,6 @@ namespace AeroFlex.Controllers
                 Country = airlineDto.Country,
                 FlightOwnerId = flightOwnerId.Value
             };
-
             var createdAirline = await _airlineRepository.CreateAirlineAsync(airline);
             return CreatedAtAction(nameof(GetAirline), new { id = createdAirline.AirlineName }, createdAirline);
         }

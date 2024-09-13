@@ -41,6 +41,7 @@ namespace AeroFlex.Repository.Implementations
                 BasePrice = flightPricingDto.BasePrice,
                 DemandMultiplier = flightPricingDto.DemandMultiplier,
                 SeasonalMultiplier = flightPricingDto.SeasonalMultiplier,
+                Discount=flightPricingDto.Discount,
                 Totalprice = CalculateTotalPrice(flightPricingDto)
             };
 

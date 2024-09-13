@@ -25,7 +25,6 @@ namespace AeroFlex.Controllers
             var FlightOwnerId = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value!;
             var Role = HttpContext.User.FindFirst(ClaimTypes.Role)?.Value;
 
-
             if (string.IsNullOrEmpty(FlightOwnerId.ToString()))
             {
                 return Unauthorized("FlightOwner claim is missing in the token.");
@@ -33,8 +32,11 @@ namespace AeroFlex.Controllers
 
             if (string.IsNullOrEmpty(Role))
             {
-                return Forbid("You are not authorized to perform this action.");
+                return Forbid();
             }
+            var flightowner = await context.FlightOwners.FirstOrDefaultAsync(fo => fo.UserId == int.Parse(FlightOwnerId));
+            if (!flightowner.IsApproved) return BadRequest("Admin approval is required");
+
             var airline = await context.Airlines.FirstOrDefaultAsync(a => a.FlightOwnerId == int.Parse(FlightOwnerId));
 
             if (airline == null) { return BadRequest("Airline not found"); }
@@ -42,6 +44,8 @@ namespace AeroFlex.Controllers
             var flight = await flightRepository.AddFlight(addFlightDto, airline.AirlineId);
 
             if (!flight.flag) { return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Couldn't create the flight" }); }
+
+
 
             return Ok(flight);
         }
@@ -168,10 +172,16 @@ namespace AeroFlex.Controllers
 
             var flightSchedule=await context.FlightsSchedules.FirstOrDefaultAsync(fs=>fs.FlightScheduleId== flightScheduleId);
 
-            flightSchedule.FlightStatus = FlightStatus.SCHEDULED;
-            context.FlightsSchedules.Update(flightSchedule);
-            await context.SaveChangesAsync();
-            return Ok("FlightSchedule status is updated to schedule it will be shown for the user");
+            if (flightSchedule == null) return BadRequest("Flight schedule id not found");
+
+            if(flightSchedule.FlightStatus==FlightStatus.SCHEDULING_PROCESS)
+            {
+                flightSchedule.FlightStatus = FlightStatus.SCHEDULED;
+                context.FlightsSchedules.Update(flightSchedule);
+                await context.SaveChangesAsync();
+                return Ok("FlightSchedule status is updated to schedule it will be shown for the user");
+            }
+            return BadRequest("Already Scheduled");
         }
     }
 }

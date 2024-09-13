@@ -45,12 +45,11 @@ namespace AeroFlex.Repository.Implementations
                     {
                         BookingId = paymentDto.BookingId,
                         ReferenceId = paymentDto.ReferenceId,
-                        PaidAmount = (int)paymentDto.PaidAmount,
+                        PaidAmount =  paymentDto.PaidAmount,
                         BalanceAmount = 0,
                         PaymentDate = paymentDto.PaymentDate,
                         PaymentMethod = paymentDto.PaymentMethod,
                         PaymentStatus = PaymentStatus.SUCCESS,
-                        Booking = booking
                     };
 
                     // Save the payment record
