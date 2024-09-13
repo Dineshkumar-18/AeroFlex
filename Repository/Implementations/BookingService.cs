@@ -19,9 +19,8 @@ namespace AeroFlex.Repository.Implementations
 
                     decimal totalPrice = 0m;
 
-                    foreach (var dictionary in bookingDTO.SeatAllocations)
-                    {
-                        foreach (var kvp in dictionary)
+                  
+                      foreach (var kvp in bookingDTO.SeatAllocations)
                         {
                             // Assuming SeatPrice exists in PassengerDto
                             var seat = await _context.Seats.FirstOrDefaultAsync(s=>s.SeatNumber==kvp.Key);
@@ -32,7 +31,6 @@ namespace AeroFlex.Repository.Implementations
                             }
                             totalPrice += seat.SeatPrice;
                         }
-                    }
 
                     var booking = new Booking
                     {
@@ -49,20 +47,19 @@ namespace AeroFlex.Repository.Implementations
                     await _context.SaveChangesAsync();
                     //passenger-seat allocation
 
-                    foreach (var dictionary in bookingDTO.SeatAllocations)
-                    {
-                        foreach (var kvp in dictionary)
+                   
+                        foreach (var kvp in bookingDTO.SeatAllocations)
                         {
                             // Assuming SeatPrice exists in PassengerDto
                             var seat = await _context.Seats.FirstOrDefaultAsync(s => s.SeatNumber == kvp.Key);
                             if (seat is null) return new GeneralResponse(false, $"Seat Number {kvp.Key} is wrong");
-                            //if (seat.Status.ToString().ToLower() == "booked")
-                            //{
-                            //    return new GeneralResponse(false, $"Seat Number {kvp.Key} is already booked");
-                            //}
-                     
+                        if (seat.Status.ToString().ToLower() == "booked")
+                        {
+                            return new GeneralResponse(false, $"Seat Number {kvp.Key} is already booked");
+                        }
 
-                            var Passenger = new Passenger
+
+                        var Passenger = new Passenger
                             {
                                 Firstname = kvp.Value.Firstname,
                                 Lastname = kvp.Value.Lastname,
@@ -83,7 +80,6 @@ namespace AeroFlex.Repository.Implementations
                             _context.Seats.Update(seat);
                             await _context.SaveChangesAsync();
                         }
-                    }
                     await transaction.CommitAsync();
                     return new GeneralResponse(true, "Booked successfully");
                 }

@@ -2,6 +2,6 @@
 {
     public class BookingDto
     {
-        public List<Dictionary<string,PassengerDto>> SeatAllocations { get; set; }
+        public Dictionary<string,PassengerDto> SeatAllocations { get; set; }
     }
 }
