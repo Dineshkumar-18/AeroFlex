@@ -14,7 +14,5 @@ namespace AeroFlex.Dtos
         public DateTime DepartTime { get; set; }
         [Required]
         public DateTime ArrivalTime { get; set; }
-        [Required]
-        public TimeSpan Duration { get; set; }
     }
 }

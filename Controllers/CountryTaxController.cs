@@ -1,5 +1,6 @@
 ﻿using AeroFlex.Dtos;
 using AeroFlex.Repository.Contracts;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -7,6 +8,7 @@ namespace AeroFlex.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize(Roles ="FlightOwner")]
     public class CountryTaxController : ControllerBase
     {
         private readonly ICountryTaxService _countryTaxService;
@@ -43,7 +45,7 @@ namespace AeroFlex.Controllers
             }
 
             var response = await _countryTaxService.AddAsync(countryTaxDto);
-            return CreatedAtAction(nameof(GetById), new { id = response.data }, response);
+            return Ok(response);
         }
 
         [HttpPut("{id}")]

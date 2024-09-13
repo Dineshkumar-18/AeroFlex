@@ -14,13 +14,13 @@ namespace AeroFlex.Controllers
     [Route("api/[controller]")]
     [Authorize(Roles = "FlightOwner")]
     [ApiController]
-    public class FlightController(IFlight flightRepository,ApplicationDbContext context,IFlightPricingService flightPricing,ISeatService seatService) : ControllerBase
+    public class FlightController(IFlight flightRepository, ApplicationDbContext context, IFlightPricingService flightPricing, ISeatService seatService) : ControllerBase
     {
         [HttpPost]
         [Route("add")]
         public async Task<ActionResult> AddFlight(AddFlightDto addFlightDto)
         {
-            if(!ModelState.IsValid) return BadRequest("Model is invalid");
+            if (!ModelState.IsValid) return BadRequest("Model is invalid");
 
             var FlightOwnerId = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value!;
             var Role = HttpContext.User.FindFirst(ClaimTypes.Role)?.Value;
@@ -66,13 +66,13 @@ namespace AeroFlex.Controllers
             {
                 return Forbid("You are not authorized to perform this action.");
             }
-            var airline = await context.Airlines.Include(a=>a.Flights).Where(a => a.FlightOwnerId == int.Parse(FlightOwnerId)).FirstOrDefaultAsync();
+            var airline = await context.Airlines.Include(a => a.Flights).Where(a => a.FlightOwnerId == int.Parse(FlightOwnerId)).FirstOrDefaultAsync();
             if (airline != null && airline.Flights.Any())
             {
                 // Assuming you want the first flight ID (or modify this as needed)
-                if(!airline.Flights.Any(f=>f.FlightId==flightId))
+                if (!airline.Flights.Any(f => f.FlightId == flightId))
                 {
-                   return Unauthorized("You are not allowed schedule the flight");
+                    return Unauthorized("You are not allowed schedule the flight");
                 }
 
                 var fli = await flightRepository.AddFlightSchedule(addSchedule, flightId);
@@ -88,18 +88,18 @@ namespace AeroFlex.Controllers
         }
         [HttpPost]
         [Route("add-pricing/{flightScheduleId}")]
-        public async Task<ActionResult> SetFlightPricing(int flightScheduleId,FlightPricingDto flightPricingDto)
+        public async Task<ActionResult> SetFlightPricing(int flightScheduleId, FlightPricingDto flightPricingDto)
         {
             if (!ModelState.IsValid) return BadRequest("Model is invalid");
-            var schedule = await context.FlightsSchedules.FirstOrDefaultAsync(fs=>fs.FlightScheduleId== flightScheduleId);
+            var schedule = await context.FlightsSchedules.FirstOrDefaultAsync(fs => fs.FlightScheduleId == flightScheduleId);
             if (schedule == null || schedule.FlightStatus.ToString().ToLower() != "scheduling_process")
             {
                 return BadRequest("Invalid flight schedule.");
             }
 
-            var response=await flightPricing.SetFlightPricingAsync(flightPricingDto, schedule);
+            var response = await flightPricing.SetFlightPricingAsync(flightPricingDto, schedule);
 
-            if(!response.flag) StatusCode(StatusCodes.Status500InternalServerError, response.message);
+            if (!response.flag) StatusCode(StatusCodes.Status500InternalServerError, response.message);
 
             return Ok(response);
         }
@@ -159,8 +159,19 @@ namespace AeroFlex.Controllers
 
             return Ok(response);
         }
+        [HttpPut]
+        [Route("updateStatusReadyToSchedule/{flightScheduleId}")]
+        public async Task<ActionResult> UpdateStatusReadyToSchedule(int flightScheduleId)
+        {
+            var pricingAreFound=await context.SeatTypePricings.FirstOrDefaultAsync(stp=>stp.FlightScheduleId==flightScheduleId);
+            if (pricingAreFound == null) return BadRequest("Flight Seat pricing or not set then only we can update the status");
 
+            var flightSchedule=await context.FlightsSchedules.FirstOrDefaultAsync(fs=>fs.FlightScheduleId== flightScheduleId);
 
-
+            flightSchedule.FlightStatus = FlightStatus.SCHEDULED;
+            context.FlightsSchedules.Update(flightSchedule);
+            await context.SaveChangesAsync();
+            return Ok("FlightSchedule status is updated to schedule it will be shown for the user");
+        }
     }
 }

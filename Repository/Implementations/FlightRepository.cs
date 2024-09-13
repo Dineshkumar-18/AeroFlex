@@ -38,7 +38,7 @@ namespace AeroFlex.Repository.Implementations
          var SameTimeFlightSchedule = _context.FlightsSchedules
        .Where(fs => fs.DepartureAirportId == DepartAirport.AirportId
            && fs.ArrivalAirportId == ArrivalAirport.AirportId
-           && fs.Duration == FlightSchedule.Duration)
+           && fs.Duration == (FlightSchedule.ArrivalTime - FlightSchedule.DepartTime))
        .AsEnumerable() // Client-side evaluation from here
        .FirstOrDefault(fs => Math.Abs((fs.DepartureTime - FlightSchedule.DepartTime).TotalMinutes) < 1 // Allow a margin of 1 minute
            && Math.Abs((fs.ArrivalTime - FlightSchedule.ArrivalTime).TotalMinutes) < 1);
@@ -52,7 +52,7 @@ namespace AeroFlex.Repository.Implementations
                 ArrivalAirportId=ArrivalAirport.AirportId,
                 DepartureTime=FlightSchedule.DepartTime,
                 ArrivalTime=FlightSchedule.ArrivalTime,
-                Duration=FlightSchedule.Duration
+                Duration=(FlightSchedule.ArrivalTime- FlightSchedule.DepartTime)
             };
 
             _context.FlightsSchedules.Add(flightSchedule);

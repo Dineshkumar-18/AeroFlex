@@ -47,20 +47,27 @@ namespace AeroFlex.Repository.Implementations
 
         public async Task<GeneralResponse<string>> AddAsync(CountryTaxDto countryTaxDto)
         {
-
             if (!Enum.TryParse<TravelType>(countryTaxDto.TravelType, true, out var travelType))
             {
                 return new GeneralResponse<string>(false, "Invalid TravelType", null);
             }
+
+            var IsAlreadyExist = await _context.CountryTaxes.AnyAsync(ct => ct.CountryId == countryTaxDto.CountryId && ct.TravelType == travelType);
+            if(IsAlreadyExist) return new GeneralResponse<string>(false, "Tax already exist for the country and travel type", null);
+
+
             var countryTax = new CountryTax
             {
                 CountryId = countryTaxDto.CountryId,
                 TravelType = travelType,
                 Rate = countryTaxDto.Rate
             };
+
+
+
             await _context.CountryTaxes.AddAsync(countryTax);
             await _context.SaveChangesAsync();
-            return new GeneralResponse<string>(true, "Country tax added successfully");
+            return new GeneralResponse<string>(true, "Country tax added successfully",countryTax.CountryTaxId.ToString());
         }
 
         public async Task<GeneralResponse<string>> UpdateAsync(int id, CountryTaxDto countryTaxDto)
