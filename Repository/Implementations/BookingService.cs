@@ -51,7 +51,7 @@ namespace AeroFlex.Repository.Implementations
                         foreach (var kvp in bookingDTO.SeatAllocations)
                         {
                             // Assuming SeatPrice exists in PassengerDto
-                            var seat = await _context.Seats.FirstOrDefaultAsync(s => s.SeatNumber == kvp.Key);
+                            var seat = await _context.Seats.FirstOrDefaultAsync(s => s.SeatNumber == kvp.Key && s.FlightScheduleId==FlightScheduleId);
                             if (seat is null) return new GeneralResponse(false, $"Seat Number {kvp.Key} is wrong");
                         if (seat.Status.ToString().ToLower() == "booked")
                         {
@@ -59,7 +59,7 @@ namespace AeroFlex.Repository.Implementations
                         }
 
 
-                        var Passenger = new Passenger
+                              var Passenger = new Passenger
                             {
                                 Firstname = kvp.Value.Firstname,
                                 Lastname = kvp.Value.Lastname,

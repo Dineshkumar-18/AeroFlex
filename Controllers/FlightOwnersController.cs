@@ -117,7 +117,7 @@ namespace AeroFlex.Controllers
 
             if(flightowner.IsApproved)
             {
-                return BadRequest("Your profile is already approved by admin you can schedule your flights");
+                return BadRequest("Your profile has already approved by admin you can schedule your flights");
             }
 
             if(!flightowner.IsApproved && !flightowner.IsProfileCompleted)

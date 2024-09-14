@@ -9,5 +9,6 @@ namespace AeroFlex.Repository.Contracts
         Task<CancellationFeeDto> CreateAsync(CancellationFeeDto dto);
         Task<CancellationFeeDto> UpdateAsync(int id, CancellationFeeDto dto);
         Task<bool> DeleteAsync(int id);
+        Task<decimal> GetPlatformFee(int flightScheduleId);
     }
 }

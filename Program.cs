@@ -37,6 +37,7 @@ builder.Services.AddScoped<ICurrencyRepository, CurrencyRepository>();
 builder.Services.AddScoped<IPaymentRepository,PaymentRepository>();
 builder.Services.AddScoped<ICountryTaxService, CountryTaxService>();
 builder.Services.AddScoped<IFlightScheduleRepository, FlightScheduleRepository>();
+builder.Services.AddScoped<ICancellationFeeRepository, CancellationFeeRepository>();
 
 builder.Services.Configure<JwtSection>(builder.Configuration.GetSection("JwtSection"));
 

@@ -162,12 +162,19 @@ namespace AeroFlex.Controllers
 
             return Ok(response);
         }
+
+
+
+
         [HttpPut]
         [Route("updateStatusReadyToSchedule/{flightScheduleId}")]
         public async Task<ActionResult> UpdateStatusReadyToSchedule(int flightScheduleId)
         {
             var pricingAreFound=await context.SeatTypePricings.FirstOrDefaultAsync(stp=>stp.FlightScheduleId==flightScheduleId);
             if (pricingAreFound == null) return BadRequest("Flight Seat pricing or not set then only we can update the status");
+
+            var cancellationFeeSetupFound=await context.CancellationFees.FirstOrDefaultAsync(cf=>cf.FlightScheduleId==flightScheduleId);
+            if (cancellationFeeSetupFound == null) return BadRequest("Cancellation fee setup is needed before schedule the flight");
 
             var flightSchedule=await context.FlightsSchedules.FirstOrDefaultAsync(fs=>fs.FlightScheduleId== flightScheduleId);
 

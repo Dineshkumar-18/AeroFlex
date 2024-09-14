@@ -101,7 +101,6 @@ namespace AeroFlex.Repository.Implementations
         {
             return new CancellationFeeDto
             {
-                CancellationFeeId = cancellationFee.CancellationFeeId,
                 FlightScheduleId = cancellationFee.FlightScheduleId,
                 ChargeRate = cancellationFee.ChargeRate,
                 PlatformFee = cancellationFee.PlatformFee,
@@ -109,6 +108,13 @@ namespace AeroFlex.Repository.Implementations
             };
         }
 
+        public async Task<decimal> GetPlatformFee(int flightScheduleId)
+        {
+            var flightType = await _context.FlightsSchedules.Include(fs => fs.Flight).Where(fs => fs.FlightScheduleId == flightScheduleId)
+                .Select(fs => fs.Flight.FlightType).FirstOrDefaultAsync();
+            var PlatformFee = flightType == TravelType.DOMESTIC ? 400m : 700m;
+            return PlatformFee;
+        }
     }
 
 }

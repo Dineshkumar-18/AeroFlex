@@ -1,4 +1,5 @@
 ﻿using AeroFlex.Dtos;
+using AeroFlex.Models;
 using AeroFlex.Repository.Contracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -40,13 +41,13 @@ namespace AeroFlex.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles ="Adm")]
+        [Authorize(Roles ="FlightOwner")]
         public async Task<IActionResult> Create(CancellationFeeDto dto)
         {
             try
             {
                 var createdCancellationFee = await _repository.CreateAsync(dto);
-                return CreatedAtAction(nameof(GetById), new { id = createdCancellationFee.CancellationFeeId }, createdCancellationFee);
+                return Ok(createdCancellationFee);
             }
             catch (Exception ex)
             {
@@ -55,6 +56,7 @@ namespace AeroFlex.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize(Roles="FlightOwner")]
         public async Task<IActionResult> Update(int id, CancellationFeeDto dto)
         {
             try
@@ -85,6 +87,15 @@ namespace AeroFlex.Controllers
 
             return NoContent();
         }
+
+        [HttpGet]
+        [Route("getplatformfee")]
+        public async Task<ActionResult> GetPlatformFee([FromQuery] int flightScheduleId)
+        {
+            var platformFee = await _repository.GetPlatformFee(flightScheduleId);
+            return Ok(platformFee);
+        }
+
     }
 
 }
