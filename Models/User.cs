@@ -41,7 +41,7 @@ namespace AeroFlex.Models
 
         public ICollection<UserRoleMapping> RoleMappings { get; set; }
         public ICollection<Booking> Bookings { get; set; }
-
+        public ICollection<Refund> Refunds { get; set; }
         public virtual RefreshTokenInfo RefreshTokenInfo { get; set; }
     }
 }

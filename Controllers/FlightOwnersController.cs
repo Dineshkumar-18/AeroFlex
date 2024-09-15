@@ -165,37 +165,5 @@ namespace AeroFlex.Controllers
             return Ok(flights);    
         }
 
-        //[HttpPost]
-        //[Route("addSchedule")]
-        //public async Task<ActionResult> AddFlightSchedule(FlightScheduleDTO flightScheduleDTO)
-        //{
-        //    var FlightOwnerId = int.Parse(HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
-        //    var Role = HttpContext.User.FindFirst(ClaimTypes.Role)?.Value;
-
-        //    if(string.IsNullOrEmpty(FlightOwnerId.ToString()))
-        //    {
-        //        return Unauthorized("FlightOwner claim is missing in the token.");
-        //    }
-
-        //    if (string.IsNullOrEmpty(Role))
-        //    {
-        //        return Forbid("You are not authorized to perform this action.");
-        //    }
-
-        //    var flight = await _context.Flights.Include(f => f.Airline).Where(f => f.FlightNumber == flightScheduleDTO.FlightNumber && f.Airline.FlightOwnerId == FlightOwnerId).ToListAsync();
-        //    if (flight == null)
-        //    {
-        //        return
-        //    }
-
-        //    //Getting departureAirport id
-        //    var departureAirportId = await _context.Airports.Where(a => a.AirportName == flightScheduleDTO.DepartureAirport).FirstOrDefaultAsync();
-        //    if (departureAirportId == null)
-        //    {
-
-        //    }
-        //    //Getting arrivalAirport id
-        //    var arrivalAirportId = await _context.Airports.Where(a => a.AirportName == flightScheduleDTO.ArrivalAirport).FirstOrDefaultAsync();
-        //}
     }
 }

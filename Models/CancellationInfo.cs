@@ -7,9 +7,10 @@ namespace AeroFlex.Models
     public class CancellationInfo
     {
         [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int CancellationId { get; set; }
         [Required]
-        public int FlightScheduleId { get; set; }
+        public int FlightScheduleId { get; set; }                   
         [Required]
         public int SeatId { get; set; }
         [Required]
@@ -20,6 +21,9 @@ namespace AeroFlex.Models
         public decimal RefundAmount { get; set; }
         [Required]
         public DateTime CancelledTime { get; set; }
+        [MaxLength(255)]
+        public string CancellationReason { get; set; }
+
         [ForeignKey("FlightScheduleId")]
         public virtual FlightSchedule FlightSchedule { get; set; }
 
@@ -30,7 +34,5 @@ namespace AeroFlex.Models
 
         [ForeignKey("CancellationFeeId")]
         public virtual CancellationFee CancellationFee { get; set; }
-
-        public virtual Refund Refund { get; set; }
     }
 }

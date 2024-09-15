@@ -40,6 +40,7 @@ namespace AeroFlex.Models
         public ICollection<Passenger> Passengers { get; set; }
         public ICollection<Seat> Seats { get; set; }
         public ICollection<Ticket> Ticket { get; set; }
+        public ICollection<Refund> Refunds { get; set; }
         public virtual Payment Payment { get; set; }
 
     }

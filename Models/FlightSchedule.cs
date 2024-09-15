@@ -26,7 +26,7 @@ namespace AeroFlex.Models
         public int FlightScheduleId { get; set; }
         [Required]
         public int FlightId { get; set; }
-        [Required]
+        [Required]  
         public int DepartureAirportId { get; set; }
         [Required]
         public int ArrivalAirportId { get; set; }

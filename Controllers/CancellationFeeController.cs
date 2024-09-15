@@ -76,6 +76,7 @@ namespace AeroFlex.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "FlightOwner")]
         public async Task<IActionResult> Delete(int id)
         {
             var success = await _repository.DeleteAsync(id);

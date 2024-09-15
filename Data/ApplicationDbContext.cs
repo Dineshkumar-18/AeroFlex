@@ -225,11 +225,11 @@ namespace AeroFlex.Data
 			{
 				entity.HasOne(ci=>ci.FlightSchedule)
 				.WithMany(fs=>fs.CancellationInfos)
-				.HasForeignKey(ci=>ci.CancellationId)
+				.HasForeignKey(ci=>ci.FlightScheduleId)
 				.OnDelete(DeleteBehavior.NoAction);
 
 				entity.HasOne(ci => ci.CancelledSeat)
-				.WithOne(s => s.CancellationInfo)
+				.WithMany(s => s.CancellationInfo)
 				.OnDelete(DeleteBehavior.NoAction);
 
 				entity.HasOne(ci=>ci.Passenger)
@@ -237,14 +237,23 @@ namespace AeroFlex.Data
 				.OnDelete(DeleteBehavior.Restrict);
 
 				entity.HasOne(ci => ci.CancellationFee)
-				.WithOne(cf => cf.CancellationInfo)
+				.WithMany(cf => cf.CancellationInfo)
 				.OnDelete(DeleteBehavior.Restrict);
 
             });
 
-          
+			modelBuilder.Entity<Refund>(entity =>
+			{
+				entity.HasOne(r => r.Booking)
+				.WithMany(b => b.Refunds)
+				.HasForeignKey(r => r.BookingId)
+				.OnDelete(deleteBehavior: DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<UserRoleMapping>()
+			});
+
+
+
+                modelBuilder.Entity<UserRoleMapping>()
             .HasKey(urm => new { urm.UserId, urm.RoleId });
 
             modelBuilder.Entity<UserRoleMapping>()

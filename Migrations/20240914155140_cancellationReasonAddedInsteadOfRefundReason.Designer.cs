@@ -4,6 +4,7 @@ using AeroFlex.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AeroFlex.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240914155140_cancellationReasonAddedInsteadOfRefundReason")]
+    partial class cancellationReasonAddedInsteadOfRefundReason
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -196,10 +199,7 @@ namespace AeroFlex.Migrations
             modelBuilder.Entity("AeroFlex.Models.CancellationInfo", b =>
                 {
                     b.Property<int>("CancellationId")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CancellationId"));
 
                     b.Property<int>("CancellationFeeId")
                         .HasColumnType("int");
@@ -226,14 +226,14 @@ namespace AeroFlex.Migrations
 
                     b.HasKey("CancellationId");
 
-                    b.HasIndex("CancellationFeeId");
-
-                    b.HasIndex("FlightScheduleId");
+                    b.HasIndex("CancellationFeeId")
+                        .IsUnique();
 
                     b.HasIndex("PassengerId")
                         .IsUnique();
 
-                    b.HasIndex("SeatId");
+                    b.HasIndex("SeatId")
+                        .IsUnique();
 
                     b.ToTable("CancellationInfos");
                 });
@@ -646,6 +646,9 @@ namespace AeroFlex.Migrations
                     b.Property<int>("BookingId")
                         .HasColumnType("int");
 
+                    b.Property<int>("CancellationId")
+                        .HasColumnType("int");
+
                     b.Property<decimal>("RefundAmount")
                         .HasColumnType("decimal(18,2)");
 
@@ -661,6 +664,9 @@ namespace AeroFlex.Migrations
                     b.HasKey("RefundId");
 
                     b.HasIndex("BookingId");
+
+                    b.HasIndex("CancellationId")
+                        .IsUnique();
 
                     b.HasIndex("UserId");
 
@@ -999,14 +1005,14 @@ namespace AeroFlex.Migrations
             modelBuilder.Entity("AeroFlex.Models.CancellationInfo", b =>
                 {
                     b.HasOne("AeroFlex.Models.CancellationFee", "CancellationFee")
-                        .WithMany("CancellationInfo")
-                        .HasForeignKey("CancellationFeeId")
+                        .WithOne("CancellationInfo")
+                        .HasForeignKey("AeroFlex.Models.CancellationInfo", "CancellationFeeId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("AeroFlex.Models.FlightSchedule", "FlightSchedule")
                         .WithMany("CancellationInfos")
-                        .HasForeignKey("FlightScheduleId")
+                        .HasForeignKey("CancellationId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
@@ -1017,8 +1023,8 @@ namespace AeroFlex.Migrations
                         .IsRequired();
 
                     b.HasOne("AeroFlex.Models.Seat", "CancelledSeat")
-                        .WithMany("CancellationInfo")
-                        .HasForeignKey("SeatId")
+                        .WithOne("CancellationInfo")
+                        .HasForeignKey("AeroFlex.Models.CancellationInfo", "SeatId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
@@ -1210,7 +1216,13 @@ namespace AeroFlex.Migrations
                     b.HasOne("AeroFlex.Models.Booking", "Booking")
                         .WithMany("Refunds")
                         .HasForeignKey("BookingId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AeroFlex.Models.CancellationInfo", "CancellationInfo")
+                        .WithOne("Refund")
+                        .HasForeignKey("AeroFlex.Models.Refund", "CancellationId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("AeroFlex.Models.User", null)
@@ -1220,6 +1232,8 @@ namespace AeroFlex.Migrations
                         .IsRequired();
 
                     b.Navigation("Booking");
+
+                    b.Navigation("CancellationInfo");
                 });
 
             modelBuilder.Entity("AeroFlex.Models.Seat", b =>
@@ -1390,7 +1404,14 @@ namespace AeroFlex.Migrations
 
             modelBuilder.Entity("AeroFlex.Models.CancellationFee", b =>
                 {
-                    b.Navigation("CancellationInfo");
+                    b.Navigation("CancellationInfo")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("AeroFlex.Models.CancellationInfo", b =>
+                {
+                    b.Navigation("Refund")
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("AeroFlex.Models.Class", b =>
@@ -1471,7 +1492,8 @@ namespace AeroFlex.Migrations
 
             modelBuilder.Entity("AeroFlex.Models.Seat", b =>
                 {
-                    b.Navigation("CancellationInfo");
+                    b.Navigation("CancellationInfo")
+                        .IsRequired();
 
                     b.Navigation("Ticket")
                         .IsRequired();

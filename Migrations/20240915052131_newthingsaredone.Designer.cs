@@ -4,6 +4,7 @@ using AeroFlex.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AeroFlex.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240915052131_newthingsaredone")]
+    partial class newthingsaredone
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -233,7 +236,8 @@ namespace AeroFlex.Migrations
                     b.HasIndex("PassengerId")
                         .IsUnique();
 
-                    b.HasIndex("SeatId");
+                    b.HasIndex("SeatId")
+                        .IsUnique();
 
                     b.ToTable("CancellationInfos");
                 });
@@ -1017,8 +1021,8 @@ namespace AeroFlex.Migrations
                         .IsRequired();
 
                     b.HasOne("AeroFlex.Models.Seat", "CancelledSeat")
-                        .WithMany("CancellationInfo")
-                        .HasForeignKey("SeatId")
+                        .WithOne("CancellationInfo")
+                        .HasForeignKey("AeroFlex.Models.CancellationInfo", "SeatId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
@@ -1471,7 +1475,8 @@ namespace AeroFlex.Migrations
 
             modelBuilder.Entity("AeroFlex.Models.Seat", b =>
                 {
-                    b.Navigation("CancellationInfo");
+                    b.Navigation("CancellationInfo")
+                        .IsRequired();
 
                     b.Navigation("Ticket")
                         .IsRequired();

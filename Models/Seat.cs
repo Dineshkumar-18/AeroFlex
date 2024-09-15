@@ -45,6 +45,6 @@ namespace AeroFlex.Models
 
         public virtual Ticket Ticket { get; set; }
 
-        public virtual CancellationInfo CancellationInfo { get; set; }
+        public ICollection<CancellationInfo> CancellationInfo { get; set; }
     }
 }
