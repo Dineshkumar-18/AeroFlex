@@ -12,6 +12,7 @@ namespace AeroFlex.Models
 
     public enum PassengerStatus
     {
+        PENDING=0,
         CONFIRMED=1,
         CANCELLED=2
     }

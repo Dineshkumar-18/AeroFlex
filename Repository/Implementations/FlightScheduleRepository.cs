@@ -10,36 +10,88 @@ namespace AeroFlex.Repository.Implementations
     public class FlightScheduleRepository(ApplicationDbContext context) : IFlightScheduleRepository
     {
 
-        public async Task<IEnumerable<FlightScheduleDTO>> GetFlightSchedulesAsync(string departureAirport, string arrivalAirport, DateTime date)
+        public async Task<List<FlightScheduleDTO>> GetFlightSchedulesAsync(string departureAirport, string arrivalAirport, DateOnly date, string Class, int TotalPassengers)
         {
             var departureAirportId = await context.Airports
-        .FirstOrDefaultAsync(a => a.AirportName == departureAirport);
+           .FirstOrDefaultAsync(a => a.AirportName == departureAirport);
 
             var arrivalAirportId = await context.Airports
                 .FirstOrDefaultAsync(a => a.AirportName == arrivalAirport);
 
             if (departureAirportId == null || arrivalAirportId == null)
             {
-                return Enumerable.Empty<FlightScheduleDTO>();
+                return new List<FlightScheduleDTO>();
             }
 
+            var ClassId=await context.Classes.FirstOrDefaultAsync(c=>c.ClassName==Class);
+
+
             // Retrieve FlightSchedules with date comparison only on the Date part
-            return await context.FlightsSchedules
-                .Include(fs => fs.Flight)
-                .Include(fs => fs.DepartureAirport)
-                .Include(fs => fs.ArrivalAirport)
-                .Where(fs => fs.DepartureAirportId == departureAirportId.AirportId
-                          && fs.ArrivalAirportId == arrivalAirportId.AirportId
-                          && fs.FlightStatus==FlightStatus.SCHEDULED
-                          && EF.Functions.DateDiffDay(fs.DepartureTime, date) == 0) // Date comparison
-                .Select(fs => new FlightScheduleDTO
-                {
-                    FlightNumber = fs.Flight.FlightNumber,
-                    DepartureAirport = fs.DepartureAirport.AirportName,
-                    ArrivalAirport = fs.ArrivalAirport.AirportName,
-                    DepartTime = fs.DepartureTime,
-                    ArrivalTime = fs.ArrivalTime
-                }).ToListAsync();
+
+
+            var results = await (from fs in context.FlightsSchedules
+                                 join flight in context.Flights
+                                 on fs.FlightId equals flight.FlightId
+                                 join airline in context.Airlines
+                                 on flight.AirlineId equals airline.AirlineId
+                                 join dairport in context.Airports
+                                 on fs.DepartureAirportId equals dairport.AirportId
+                                 join aairport in context.Airports
+                                 on fs.ArrivalAirportId equals aairport.AirportId
+                                 join fsc in context.FlightScheduleClasses
+                                 on fs.FlightScheduleId equals fsc.FlightScheduleId
+                                 join cls in context.Classes
+                                 on fsc.ClassId equals cls.ClassId
+                                 join flightpricing in context.FlightsPricings
+                                 on fs.FlightScheduleId equals flightpricing.FlightScheduleId
+                                 join seat in context.Seats
+                                 on fsc.FlightclassId equals seat.FlightScheduleClassId
+                                 where dairport.AirportId == departureAirportId.AirportId &&
+                                 aairport.AirportId == arrivalAirportId.AirportId &&
+                                 DateOnly.FromDateTime(fs.DepartureTime)==date &&
+                                 cls.ClassId == ClassId.ClassId &&
+                                 seat.Status == SeatStatus.AVAILABLE
+                                 group seat by new
+                                 {
+                                     fs.FlightScheduleId,
+                                     departure=dairport.AirportName,
+                                     arrival=aairport.AirportName,
+                                     departureIata=dairport.IataCode,
+                                     arrivalIata=aairport.IataCode,
+                                     cls.ClassName,
+                                     airline.AirlineName,
+                                     fs.DepartureTime,
+                                     fs.ArrivalTime,
+                                     flight.FlightNumber,
+                                     flightpricing.Totalprice,
+                                     flightpricing.TaxAmount,
+                                     departureCity=dairport.City,
+                                     arrivalCity=aairport.City
+                                 } into seatGroup
+                                 where seatGroup.Count() >= TotalPassengers // Check if available seats >= total passengers
+                                 select new FlightScheduleDTO
+                                 {
+                                     FlightScheduleId=seatGroup.Key.FlightScheduleId,
+                                     AirlineName = seatGroup.Key.AirlineName,
+                                     DepartureAirportIataCode = seatGroup.Key.departureIata,
+                                     ArrivalAirportIataCode = seatGroup.Key.arrivalIata,
+                                     FlightNumber = seatGroup.Key.FlightNumber,
+                                     DepartureAirport = seatGroup.Key.departure,
+                                     DepartureCity = seatGroup.Key.departureCity,
+                                     ArrivalCity = seatGroup.Key.arrivalCity,
+                                     ArrivalAirport = seatGroup.Key.arrival,
+                                     DepartureDate=DateOnly.FromDateTime(seatGroup.Key.DepartureTime),
+                                     ArrivalDate= DateOnly.FromDateTime(seatGroup.Key.ArrivalTime),
+                                     DepartureTime = TimeOnly.FromDateTime(seatGroup.Key.DepartureTime),
+                                     ArrivalTime = TimeOnly.FromDateTime(seatGroup.Key.ArrivalTime),
+                                     Duration = TimeOnly.FromTimeSpan(seatGroup.Key.ArrivalTime - seatGroup.Key.DepartureTime),
+                                     FlightPricings = seatGroup.Key.Totalprice,
+                                     TaxCharges = seatGroup.Key.TaxAmount,
+                                     AvailableSeatsCount = seatGroup.Count() // The count of available seats
+                                 }).ToListAsync();
+
+
+            return results;
         }
     }
 }

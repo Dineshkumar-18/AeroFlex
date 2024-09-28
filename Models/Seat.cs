@@ -24,6 +24,8 @@ namespace AeroFlex.Models
         [Required]
         public int SeatTypePricingId { get; set; }
         [Required]
+        public decimal TaxAmount { get; set; }
+        [Required]
         public decimal SeatPrice { get; set; }
         [Required]
         public SeatStatus Status { get; set; }=SeatStatus.AVAILABLE;

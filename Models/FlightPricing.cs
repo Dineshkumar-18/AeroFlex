@@ -16,6 +16,10 @@ namespace AeroFlex.Models
         public decimal? DemandMultiplier { get; set; }
         public decimal? Discount {  get; set; }
         [Required]
+        public decimal AdjustedSeatPrice { get; set; }
+        [Required]
+        public decimal TaxAmount { get; set; }
+        [Required]
         public decimal Totalprice {  get; set; }
 
         [ForeignKey("FlightScheduleId")]

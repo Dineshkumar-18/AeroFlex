@@ -60,17 +60,32 @@ namespace AeroFlex.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AirlineId"));
 
+                    b.Property<string>("AirlineLogo")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("AirlineName")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<string>("ContactNumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Country")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("FlightOwnerId")
                         .HasColumnType("int");
+
+                    b.Property<DateOnly>("FoundedYear")
+                        .HasColumnType("date");
 
                     b.Property<string>("Headquarters")
                         .HasMaxLength(50)
@@ -80,6 +95,10 @@ namespace AeroFlex.Migrations
                         .IsRequired()
                         .HasMaxLength(2)
                         .HasColumnType("nvarchar(2)");
+
+                    b.Property<string>("WebsiteUrl")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("AirlineId");
 
@@ -146,6 +165,9 @@ namespace AeroFlex.Migrations
                     b.Property<int>("FlightScheduleId")
                         .HasColumnType("int");
 
+                    b.Property<decimal>("TaxAmount")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<decimal>("TotalAmount")
                         .HasColumnType("decimal(18,2)");
 
@@ -201,6 +223,9 @@ namespace AeroFlex.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CancellationId"));
 
+                    b.Property<decimal>("CancellationCharge")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<int>("CancellationFeeId")
                         .HasColumnType("int");
 
@@ -217,6 +242,9 @@ namespace AeroFlex.Migrations
 
                     b.Property<int>("PassengerId")
                         .HasColumnType("int");
+
+                    b.Property<decimal>("PlatformAndServiceCharge")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("RefundAmount")
                         .HasColumnType("decimal(18,2)");
@@ -389,6 +417,9 @@ namespace AeroFlex.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("FlightPricingId"));
 
+                    b.Property<decimal>("AdjustedSeatPrice")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<decimal>("BasePrice")
                         .HasColumnType("decimal(18,2)");
 
@@ -405,6 +436,9 @@ namespace AeroFlex.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal?>("SeasonalMultiplier")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("TaxAmount")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("Totalprice")
@@ -598,8 +632,9 @@ namespace AeroFlex.Migrations
                     b.Property<int>("PaymentStatus")
                         .HasColumnType("int");
 
-                    b.Property<int>("ReferenceId")
-                        .HasColumnType("int");
+                    b.Property<string>("ReferenceNumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("PaymentId");
 
@@ -718,6 +753,9 @@ namespace AeroFlex.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
+                    b.Property<decimal>("TaxAmount")
+                        .HasColumnType("decimal(18,2)");
+
                     b.HasKey("SeatId");
 
                     b.HasIndex("BookingId");
@@ -775,7 +813,7 @@ namespace AeroFlex.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TicketId"));
 
-                    b.Property<int?>("BookingId")
+                    b.Property<int>("BookingId")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("GeneratedAt")
@@ -790,9 +828,8 @@ namespace AeroFlex.Migrations
                     b.Property<decimal>("TicketPrice")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<string>("TicketStatus")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("TicketStatus")
+                        .HasColumnType("int");
 
                     b.HasKey("TicketId");
 
@@ -852,6 +889,9 @@ namespace AeroFlex.Migrations
 
                     b.Property<string>("UserName")
                         .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UserProfile")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("UserId");
@@ -925,6 +965,9 @@ namespace AeroFlex.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("OperatingLicenseNumber")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ProfilePictureUrl")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("SupportContact")
@@ -1284,9 +1327,11 @@ namespace AeroFlex.Migrations
 
             modelBuilder.Entity("AeroFlex.Models.Ticket", b =>
                 {
-                    b.HasOne("AeroFlex.Models.Booking", null)
-                        .WithMany("Ticket")
-                        .HasForeignKey("BookingId");
+                    b.HasOne("AeroFlex.Models.Booking", "Booking")
+                        .WithMany("Tickets")
+                        .HasForeignKey("BookingId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("AeroFlex.Models.Passenger", "Passenger")
                         .WithOne("Ticket")
@@ -1299,6 +1344,8 @@ namespace AeroFlex.Migrations
                         .HasForeignKey("AeroFlex.Models.Ticket", "SeatId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Booking");
 
                     b.Navigation("Passenger");
 
@@ -1385,7 +1432,7 @@ namespace AeroFlex.Migrations
 
                     b.Navigation("Seats");
 
-                    b.Navigation("Ticket");
+                    b.Navigation("Tickets");
                 });
 
             modelBuilder.Entity("AeroFlex.Models.CancellationFee", b =>

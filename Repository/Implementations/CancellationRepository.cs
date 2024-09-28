@@ -27,21 +27,19 @@ namespace AeroFlex.Repository.Implementations
                     .FirstOrDefaultAsync(cf => cf.FlightScheduleId == flightScheduleId);
                 if (cancellationFee == null) return new GeneralResponse(false, "CancellationFee information not found");
 
-                var flightPricings = await context.FlightsPricings
-                    .FirstOrDefaultAsync(fp => fp.FlightScheduleId == flightScheduleId);
-                if (flightPricings == null) return new GeneralResponse(false, "Flight pricings not found");
+                //var flightPricings = await context.FlightsPricings
+                //    .FirstOrDefaultAsync(fp => fp.FlightScheduleId == flightScheduleId);
+                //if (flightPricings == null) return new GeneralResponse(false, "Flight pricings not found");
 
                 var booking = await context.Passengers.Include(p => p.Booking)
                                      .FirstOrDefaultAsync(p => p.PassengerId == cancellation.Passengers[0]);
                 if (booking == null) return new GeneralResponse(false, "Booking information not found");
 
-                var IndividualFlightPricing = flightPricings.Totalprice / booking.Booking.TotalPassengers;
-
                 var cancellationInfos = new List<CancellationInfo>();
 
                 foreach (var passengerId in cancellation.Passengers)
                 {
-                    var passenger = await context.Passengers.Include(p => p.Seat)
+                    var passenger = await context.Passengers.Include(p => p.Seat).Include(p=>p.Ticket)
                         .FirstOrDefaultAsync(p => p.PassengerId == passengerId);
                     if (passenger == null) return new GeneralResponse(false, $"Passenger id {passengerId} not found");
 
@@ -49,10 +47,12 @@ namespace AeroFlex.Repository.Implementations
                     if (seat == null) return new GeneralResponse(false, "Seat information not found");
 
                     decimal refundAmount = 0m;
-
+                    decimal CancelCharge = 0m;
+                   
                     if (cancellationFee.ApplicableDueDate > CancelledTime)
                     {
-                        refundAmount = IndividualFlightPricing + seat.SeatPrice;
+                        CancelCharge = (seat.SeatPrice * cancellationFee.ChargeRate) / 100;
+                        refundAmount = seat.SeatPrice - CancelCharge;
                         TotalRefundAmount = TotalRefundAmount + refundAmount;
                     }
 
@@ -60,6 +60,8 @@ namespace AeroFlex.Repository.Implementations
                     {
                         CancellationFeeId = cancellationFee.CancellationFeeId,
                         PassengerId = passengerId,
+                        CancellationCharge=CancelCharge,
+                        PlatformAndServiceCharge=cancellationFee.PlatformFee,
                         SeatId = seat.SeatId,
                         CancelledTime= CancelledTime,
                         FlightScheduleId = flightScheduleId,
@@ -71,10 +73,13 @@ namespace AeroFlex.Repository.Implementations
 
                     // Update passenger status
                     passenger.PassengerStatus = PassengerStatus.CANCELLED;
+                    passenger.Ticket.TicketStatus = Bookingstatus.CANCELLED;
                     seat.Status = SeatStatus.AVAILABLE;
                     seat.BookingId = null;
                     seat.PassengerId = null;
                     context.Passengers.Update(passenger);
+
+
                 }
 
                 // Add cancellation info and save changes to generate CancellationId
@@ -104,14 +109,13 @@ namespace AeroFlex.Repository.Implementations
                     return new GeneralResponse(true, "Your booking has cancelled successfully but you are not eligible for getting refund amount");
                 }
 
-                decimal ChargeRateDistribution = cancellationFee.ChargeRate / cancellation.Passengers.Count;
-                TotalRefundAmount = TotalRefundAmount - ((TotalRefundAmount * (ChargeRateDistribution) / 100));
                  context.Refunds.Add(new Refund
                  {
                      RefundAmount = TotalRefundAmount,
                      BookingId = booking.Booking.BookingId,
                      UserId = userId,
                  });
+
 
                 await context.SaveChangesAsync();
                 await transaction.CommitAsync();

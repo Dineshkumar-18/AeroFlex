@@ -12,8 +12,7 @@ using Microsoft.AspNetCore.Authorization;
 namespace AeroFlex.Controllers
 {
     [Route("api/[controller]")]
-    [ApiController]
-    [Authorize]
+    [ApiController] 
     public class AirportsController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
@@ -104,6 +103,35 @@ namespace AeroFlex.Controllers
 
             return NoContent();
         }
+
+        [HttpGet("search")]
+        public async Task<ActionResult> Search([FromQuery] string query)
+        {
+            if (string.IsNullOrWhiteSpace(query))
+            {
+                return BadRequest("Search query cannot be empty.");
+            }
+            var normalizedQuery = query.ToLower().Replace(" ", "").Replace(".", "").Replace("-", "");
+
+            var results = await _context.Airports
+                .Where(x => x.AirportName.ToLower().Replace(" ", "").Replace(".", "").Replace("-", "").Contains(normalizedQuery) ||
+                            x.City.ToLower().Replace(" ", "").Replace(".", "").Replace("-", "").Contains(normalizedQuery) ||
+                            x.IataCode.ToLower().Replace(" ", "").Replace(".", "").Replace("-", "").Contains(normalizedQuery))
+                .ToListAsync();
+
+
+            return Ok(results);
+        }
+
+        private string NormalizeString(string input)
+        {
+            return new string(input.ToLower()
+                .Replace(" ", "")  // Remove spaces
+                .Where(c => char.IsLetterOrDigit(c)) // Only keep letters and digits
+                .ToArray());
+        }
+
+
 
         private bool AirportExists(int id)
         {

@@ -5,6 +5,7 @@ using AeroFlex.Repository.Contracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System;
 using System.Security.Claims;
 
 namespace AeroFlex.Controllers
@@ -12,8 +13,9 @@ namespace AeroFlex.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
-    public class AirlinesController(IAirlineRepository _airlineRepository,ApplicationDbContext _context) : ControllerBase
+    public class AirlinesController(IAirlineRepository _airlineRepository,ApplicationDbContext _context, IWebHostEnvironment _environment) : ControllerBase
     {
+
 
         // GET: api/Airlines
         [HttpGet]
@@ -37,6 +39,42 @@ namespace AeroFlex.Controllers
 
             var airlines = await _airlineRepository.GetAllAirlinesByFlightownerAsync(flightOwnerId);
             return Ok(airlines);
+        }
+
+        // POST: api/upload-logo
+        [HttpPost("upload-logo")]
+        public async Task<IActionResult> UploadLogo(IFormFile file)
+        {
+
+            if (file == null || file.Length == 0)
+                return BadRequest("File is not selected");
+
+            try
+            {
+                string uploadPath = Path.Combine(_environment.WebRootPath, "uploads");
+
+                if (!Directory.Exists(uploadPath))
+                    Directory.CreateDirectory(uploadPath);
+
+                string fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
+
+                string filePath = Path.Combine(uploadPath, fileName);
+
+                // Save the file
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                // Generate the file URL
+                string fileUrl = $"{Request.Scheme}://{Request.Host}/uploads/{fileName}";
+
+                return Ok(new { fileUrl });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Internal server error: " + ex.Message);
+            }
         }
 
 
@@ -76,6 +114,11 @@ namespace AeroFlex.Controllers
                 IataCode = airlineDto.IataCode,
                 Headquarters = airlineDto.Headquarters,
                 Country = airlineDto.Country,
+                ContactNumber=airlineDto.ContactNumber,
+                Email=airlineDto.Email,
+                FoundedYear=airlineDto.FoundedYear,
+                WebsiteUrl=airlineDto.WebsiteUrl,
+                AirlineLogo=airlineDto.AirlineLogo,
                 FlightOwnerId = flightOwnerId.Value
             };
             var createdAirline = await _airlineRepository.CreateAirlineAsync(airline);

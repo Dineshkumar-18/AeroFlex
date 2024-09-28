@@ -1,5 +1,6 @@
 ﻿using AeroFlex.Data;
 using AeroFlex.Dtos;
+using AeroFlex.Migrations;
 using AeroFlex.Models;
 using AeroFlex.Repository.Contracts;
 using AeroFlex.Response;
@@ -35,6 +36,8 @@ namespace AeroFlex.Repository.Implementations
 
             if (flightPricingDto.SeasonalMultiplier <= 0 || flightPricingDto.DemandMultiplier <= 0) return new GeneralResponse(false, "Multiplier like seasonal,demand should be greater than 0");
 
+            var AdjustedFlightPrice = CalculateAdjustedFlightPrice(flightPricingDto);
+            var CalculatedTax=CalculateTax(AdjustedFlightPrice, Countrytax.Rate);
             var flightPricing = new FlightPricing
             {
                 FlightScheduleId = flightSchedule.FlightScheduleId,
@@ -43,7 +46,9 @@ namespace AeroFlex.Repository.Implementations
                 DemandMultiplier = flightPricingDto.DemandMultiplier,
                 SeasonalMultiplier = flightPricingDto.SeasonalMultiplier,
                 Discount=flightPricingDto.Discount,
-                Totalprice = CalculateTotalPrice(flightPricingDto)
+                AdjustedSeatPrice = AdjustedFlightPrice,
+                TaxAmount=CalculatedTax,
+                Totalprice = AdjustedFlightPrice+CalculatedTax
             };
 
             context.FlightsPricings.Add(flightPricing);
@@ -53,20 +58,24 @@ namespace AeroFlex.Repository.Implementations
 
         }
 
-        public Task<FlightPricingDto> UpdateFlightPricingAsync(FlightPricingDto flightPricingDto)
-        {
-            throw new NotImplementedException();
-        }
-
-
-        private decimal CalculateTotalPrice(FlightPricingDto model)
+        private decimal CalculateAdjustedFlightPrice(FlightPricingDto model)
         {
             decimal basePrice = model.BasePrice;
             decimal seasonalMultiplier = model.SeasonalMultiplier ?? 1;
             decimal demandMultiplier = model.DemandMultiplier ?? 1;
             decimal discount = model.Discount ?? 0;
+            decimal totalprice = (basePrice * seasonalMultiplier * demandMultiplier) - discount;
+            return totalprice;
+        }
 
-            return basePrice * seasonalMultiplier * demandMultiplier - discount;
+        private decimal CalculateTax(decimal adjustedprice,decimal taxrate)
+        {
+            return (adjustedprice * taxrate) / 100;
+        }
+
+        public Task<FlightPricingDto> UpdateFlightPricingAsync(FlightPricingDto flightPricingDto)
+        {
+            throw new NotImplementedException();
         }
     }
 }

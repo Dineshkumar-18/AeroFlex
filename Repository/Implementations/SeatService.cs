@@ -11,113 +11,130 @@ namespace AeroFlex.Repository.Implementations
 {
     public class SeatService(ApplicationDbContext context) : ISeatService
     {
-        public async Task<GeneralResponse> AddSeatPricing(List<SeatDto> seatDtos,int flightScheduleId)
+
+        public async Task<GeneralResponse> AddSeatPricingWithPattern(SeatDto seatDto,int flightScheduleId)
         {
-            //Retrieving the classes
+
+            var flightPricings = await context.FlightsPricings.FirstOrDefaultAsync(fp => fp.FlightScheduleId == flightScheduleId);
+            if (flightPricings == null) return new GeneralResponse(false, "Flight Pricing Not found");
+
             var totalColumns = await (from fli in context.Flights
-                              join fs in context.FlightsSchedules
-                              on fli.FlightId equals fs.FlightId
-                              where fs.FlightScheduleId==flightScheduleId
-                              select fli.TotalSeatColumn
-                              ).FirstOrDefaultAsync();
+                                      join fs in context.FlightsSchedules
+                                      on fli.FlightId equals fs.FlightId
+                                      where fs.FlightScheduleId == flightScheduleId
+                                      select fli.TotalSeatColumn
+                             ).FirstOrDefaultAsync();
 
-           
+            if (seatDto.SeatTypePattern.Count != totalColumns) return new GeneralResponse(false, "Seat type pattern is not match withe total number of columns in the flight");
 
-            foreach (var seatDto in seatDtos)
+
+            foreach(var Class in seatDto.ClassNames)
             {
-                // Retrieve the class information based on the ClassName
-                var classInfo = await context.Classes.FirstOrDefaultAsync(c => c.ClassName == seatDto.ClassName);
-                if (classInfo == null) return new GeneralResponse(false, $"Class {seatDto.ClassName} not found");
+                var classInfo = await context.Classes.FirstOrDefaultAsync(c => c.ClassName == Class);
+                if (classInfo == null) return new GeneralResponse(false, $"Class {Class} not found");
 
                 // Find FlightScheduleClass to get the total seats for the class in the schedule
                 var flightScheduleClass = await context.FlightScheduleClasses.FirstOrDefaultAsync(fsc => fsc.ClassId == classInfo.ClassId && fsc.FlightScheduleId == flightScheduleId);
-                if (flightScheduleClass == null) return new GeneralResponse(false, $"Class {seatDto.ClassName} not found in flight schedule");
+                if (flightScheduleClass == null) return new GeneralResponse(false, $"Class {Class} not found in flight schedule");
 
                 int totalSeatsForClass = flightScheduleClass.TotalSeats;
-                // Calculate number of rows
-                int totalRows = (int)Math.Ceiling((double)totalSeatsForClass / totalColumns); 
 
                 // Call a method to add seats for this specific class
-                var response = await AddSeatsWithDynamicColumns(seatDto, flightScheduleId, totalColumns, totalRows);
+                var response = await AddSeatsWithDynamicColumns(Class, seatDto.SeatTypePattern,flightScheduleId,totalSeatsForClass ,totalColumns, flightScheduleClass, flightPricings);
                 if (!response.flag) return response;  // If any failure, return the error
+                
             }
-
             return new GeneralResponse(true, "Seats added successfully for all classes.");
         }
 
         //dynamic column-seats
 
-        public async Task<GeneralResponse> AddSeatsWithDynamicColumns(SeatDto seatDto, int flightScheduleId, int totalColumns, int totalRows)
+        private async Task<GeneralResponse> AddSeatsWithDynamicColumns(string Class,List<string> SeatTypePattern ,int flightScheduleId,
+                                                                      int totalSeatsForClass,int totalColumns, FlightScheduleClass flightScheduleClass,FlightPricing flightPricings)
         {
-            var classInfo = await context.Classes.FirstOrDefaultAsync(c => c.ClassName == seatDto.ClassName);
-            if (classInfo == null) return new GeneralResponse(false, $"Class {seatDto.ClassName} not found");
+           
+            // Track the last seat number
+            var existingSeats = await context.Seats
+                                    .Where(s => s.FlightScheduleId == flightScheduleId)
+                                    .OrderByDescending(s => s.SeatNumber)
+                                    .FirstOrDefaultAsync();
 
-            var flightScheduleClass = await context.FlightScheduleClasses.FirstOrDefaultAsync(fsc => fsc.ClassId == classInfo.ClassId && fsc.FlightScheduleId == flightScheduleId);
-            if (flightScheduleClass == null) return new GeneralResponse(false, $"Class {seatDto.ClassName} not found in flight schedule");
+            int startRow = 1;
+            char startColumn = 'A';
 
-            var seatNumber = 1;
-            for (int row = 1; row <= totalRows; row++)
+            // If seats exist, find the last seat's row and column
+            if (existingSeats != null)
             {
-                for (int col = 1; col <= totalColumns; col++)
+                startRow = int.Parse(existingSeats.SeatNumber[..^1]);  // Extract row
+                startColumn = existingSeats.SeatNumber[^1];             // Extract column
+
+                // Move to the next column or row if needed
+                if (startColumn == (char)('A' + totalColumns - 1))
+                {
+                    // If column exceeds total columns, move to next row
+                    startRow++;
+                    startColumn = 'A';
+                }
+                else
+                {
+                    // Otherwise, move to the next column
+                    startColumn++;
+                }
+            }
+
+            int seatCount = 0;
+            for (int row = startRow; seatCount < totalSeatsForClass; row++)
+            {
+                for (int col = (row == startRow ? startColumn - 'A' + 1 : 1); col <= totalColumns; col++)
                 {
                     string seatLabel = GetSeatLabel(col);
 
-                    // determine the seat type based on column (window, aisle, middle)
-                    var seatType = GetSeatTypeByColumn(col, totalColumns);
+                    // Determine seat type from SeatTypePattern using column index
+                    int patternIndex = (col - 1) % SeatTypePattern.Count;
+                    string seatType = SeatTypePattern[patternIndex];
 
-                    var seatTypePricing = await context.SeatTypePricings.FirstOrDefaultAsync(stp => stp.FlightScheduleClassId == flightScheduleClass.FlightclassId && stp.SeatTypeName == seatType);
-                    if (seatTypePricing == null) return new GeneralResponse(false, $"Seat type pricing not found for class {seatDto.ClassName}");
+                    if(!Enum.TryParse<SeatType>(seatType,true,out var seatTypeEnum))
+                    {
+                        return new GeneralResponse(false, "Invalid SeatType seat type should be in [Window,Aisle,Middle]");
+                    }
+
+                    var seatTypePricing = await context.SeatTypePricings.FirstOrDefaultAsync(stp => stp.FlightScheduleClassId == flightScheduleClass.FlightclassId && stp.SeatTypeName== seatTypeEnum);
+                    if (seatTypePricing == null) return new GeneralResponse(false, $"Seat type pricing not found for class {Class}-{seatType}");
+
+                    decimal ClassViseTaxAmount = flightScheduleClass.TotalPrice - flightScheduleClass.BasePrice;
 
                     var seat = new Seat
                     {
                         SeatNumber = $"{row}{seatLabel}",
-                        FlightScheduleId=flightScheduleId,
+                        FlightScheduleId = flightScheduleId,
                         FlightScheduleClassId = flightScheduleClass.FlightclassId,
                         SeatTypePricingId = seatTypePricing.SeatTypePricingId,
-                        SeatPrice = seatTypePricing.TotalPriceByClassAndType
+                        TaxAmount= ClassViseTaxAmount+flightPricings.TaxAmount,
+                        SeatPrice = seatTypePricing.TotalPriceByClassAndType + flightPricings.Totalprice
                     };
 
                     context.Seats.Add(seat);
-                    seatNumber++;
+                    seatCount++;
 
                     // If the total seat count is reached, break the loop
-                    if (seatNumber > flightScheduleClass.TotalSeats) break;
+                    if (seatCount >= flightScheduleClass.TotalSeats) break;
                 }
 
-                // Break if total seat count is reached
-                if (seatNumber > flightScheduleClass.TotalSeats) break;
+                // Reset the column to start at A for the next row
+                startColumn = 'A';
+
+                // If the total seat count is reached, break the loop
+                if (seatCount >= flightScheduleClass.TotalSeats) break;
             }
 
             await context.SaveChangesAsync();
-            return new GeneralResponse(true, $"Seats added for class {seatDto.ClassName}.");
+            return new GeneralResponse(true, $"Seats added for class {Class}.");
         }
-
 
         private string GetSeatLabel(int column)
         {
             // Generate the seat label based on column (e.g., A, B, C, D, etc.)
-            return ((char)(64 + column)).ToString(); // Convert column number to letter
-        }
-
-        private SeatType GetSeatTypeByColumn(int column, int totalColumns)
-        {
-            if (totalColumns == 5)
-            {
-                if (column == 1 || column == 5) return SeatType.WINDOW;
-                if (column == 2 || column == 4) return SeatType.AISLE;
-                return SeatType.MIDDLE;
-            }
-            else if (totalColumns == 6)
-            {
-                if (column == 1 || column == 6) return SeatType.WINDOW;
-                if (column == 2 || column == 5) return SeatType.AISLE;
-                return SeatType.MIDDLE;
-            }
-            else
-            {
-                // Handle other column configurations dynamically
-                return column == 1 || column == totalColumns ? SeatType.WINDOW : column == 2 || column == totalColumns - 1 ? SeatType.AISLE : SeatType.MIDDLE;
-            }
+            return ((char)('A' + column-1)).ToString(); // Convert column number to letter
         }
 
         public async Task<GeneralResponse> SetClassPricing(List<ClassPricingDto> classPricingDtos, int FlightScheduleId)
@@ -180,39 +197,53 @@ namespace AeroFlex.Repository.Implementations
             return new GeneralResponse(true, "FlightSchedule Class added successfully");
         }
 
-        public async Task<GeneralResponse> SetSeatTypePricing(List<SeatTypePriceDto> seatTypePriceDtos, int FlightScheduleId)
+        public async Task<GeneralResponse> SetSeatTypePricing(Dictionary<string, List<decimal>> seatTypePriceDtos, int FlightScheduleId)
         {
-            if (seatTypePriceDtos == null || !seatTypePriceDtos.Any())
+            if (seatTypePriceDtos == null || seatTypePriceDtos.Count == 0)
                 return new GeneralResponse(false, "Model is invalid");
-                FlightScheduleClass? FlightScheduleClass = null;
+            
+            FlightScheduleClass? FlightScheduleClass = null;
 
-            for (int i = 0; i < seatTypePriceDtos.Count; i++)
+            var seatTypes = new List<string> { "WINDOW", "MIDDLE", "AISLE" };
+
+            foreach (var entry in seatTypePriceDtos)
             {
-                var seatTypePriceDto = seatTypePriceDtos[i];
+                var className = entry.Key; 
+                var seatPrices = entry.Value; 
 
-                if (i % 3 == 0)
+                if (seatPrices == null || seatPrices.Count != seatTypes.Count)
+                    return new GeneralResponse(false, "Invalid number of seat prices provided");
+
+                // Retrieve the class from the database
+                var Class = await context.Classes.FirstOrDefaultAsync(c => c.ClassName == className);
+                if (Class == null)
+                    return new GeneralResponse(false, $"Specified class {className} not found");
+
+                // Retrieve the flight schedule class
+                var flightScheduleClass = await context.FlightScheduleClasses.FirstOrDefaultAsync(fsc => fsc.FlightScheduleId == FlightScheduleId && fsc.ClassId == Class.ClassId);
+                if (flightScheduleClass == null)
+                    return new GeneralResponse(false, $"Class {className} not found in this flight schedule");
+
+                // Loop through seat types and prices, and map them accordingly
+                for (int i = 0; i < seatTypes.Count; i++)
                 {
-                    var className = seatTypePriceDto.ClassName;
+                    var seatType = seatTypes[i];
+                    var seatPrice = seatPrices[i];
 
-                    var Class = await context.Classes.FirstOrDefaultAsync(c => c.ClassName == className);
-                    if (Class == null) return new GeneralResponse(false, $"Specified class {className} not found");
+                    // Create a new SeatTypePricing entry
+                    var seatTypePricing = new SeatTypePricing
+                    {
+                        FlightScheduleId = FlightScheduleId,
+                        FlightScheduleClassId = flightScheduleClass.FlightclassId,
+                        SeatTypeName = (SeatType)Enum.Parse(typeof(SeatType), seatType),
+                        SeatPriceByType = seatPrice,
+                        TotalPriceByClassAndType = flightScheduleClass.TotalPrice + seatPrice
+                    };
 
-                     FlightScheduleClass = await context.FlightScheduleClasses.FirstOrDefaultAsync(fsc => fsc.FlightScheduleId == FlightScheduleId && fsc.ClassId == Class.ClassId);
-
-                    if (FlightScheduleClass == null) return new GeneralResponse(false, "Classname is not found in this flight schedule");
+                    context.SeatTypePricings.Add(seatTypePricing);
                 }
-
-                var Seattypepricing = new SeatTypePricing
-                {
-                    FlightScheduleId = FlightScheduleId,
-                    FlightScheduleClassId = FlightScheduleClass.FlightclassId,
-                    SeatTypeName = (SeatType)Enum.Parse(typeof(SeatType), seatTypePriceDto.SeatType.ToUpper()),
-                    SeatPriceByType = seatTypePriceDto.SeatTypePrice,
-                    TotalPriceByClassAndType = (FlightScheduleClass.TotalPrice + seatTypePriceDto.SeatTypePrice)
-                };
-
-                context.Add(Seattypepricing);
             }
+
             await context.SaveChangesAsync();
 
             return new GeneralResponse(true,"SeatTypePricing is set successfully");

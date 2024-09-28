@@ -14,7 +14,22 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
+
 builder.Services.AddControllers();
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowReactApp",
+        policy =>
+        {
+			policy.WithOrigins("https://localhost:5173")
+				   .AllowAnyMethod()
+				   .AllowAnyHeader()
+				   .AllowCredentials();
+        });
+});
+
+
 builder.Services.AddDbContext<ApplicationDbContext>(options=>options.UseSqlServer(builder.Configuration.GetConnectionString("DBconnection")));
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -39,6 +54,7 @@ builder.Services.AddScoped<ICountryTaxService, CountryTaxService>();
 builder.Services.AddScoped<IFlightScheduleRepository, FlightScheduleRepository>();
 builder.Services.AddScoped<ICancellationFeeRepository, CancellationFeeRepository>();
 builder.Services.AddScoped<ICancellationRepository, CancellationRepository>();
+builder.Services.AddScoped<ITicketRepository, TicketRepository>();
 
 builder.Services.Configure<JwtSection>(builder.Configuration.GetSection("JwtSection"));
 
@@ -77,6 +93,10 @@ builder.Services.AddAuthentication(options =>
 });
 
 var app = builder.Build();
+
+app.UseCors("AllowReactApp");
+
+app.UseStaticFiles();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

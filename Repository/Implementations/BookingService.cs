@@ -18,18 +18,20 @@ namespace AeroFlex.Repository.Implementations
                     var flightPricing = await _context.FlightsPricings.FirstOrDefaultAsync(fp=>fp.FlightScheduleId== FlightScheduleId);
 
                     decimal totalPrice = 0m;
+                    decimal totalTaxAmount = 0m;
 
                   
                       foreach (var kvp in bookingDTO.SeatAllocations)
                         {
                             // Assuming SeatPrice exists in PassengerDto
-                            var seat = await _context.Seats.FirstOrDefaultAsync(s=>s.SeatNumber==kvp.Key);
+                            var seat = await _context.Seats.FirstOrDefaultAsync(s=>s.SeatNumber==kvp.Key && s.FlightScheduleId== FlightScheduleId);
                             if (seat is null) return new GeneralResponse(false, $"Seat Number {kvp.Key} is wrong");
                             if(seat.Status.ToString().ToLower()=="booked")
                             {
                                 return new GeneralResponse(false, $"Seat Number {kvp.Key} is already booked");
                             }
                             totalPrice += seat.SeatPrice;
+                        totalTaxAmount += seat.TaxAmount;
                         }
 
                     var booking = new Booking
@@ -39,7 +41,8 @@ namespace AeroFlex.Repository.Implementations
                         TotalPassengers = bookingDTO.SeatAllocations.Count,
                         BookingDate = DateTime.UtcNow,
                         FlightPricingId = flightPricing!.FlightPricingId,
-                        TotalAmount = totalPrice+flightPricing.Totalprice,
+                        TaxAmount = totalTaxAmount,
+                        TotalAmount = totalPrice,
                         BookingStatus = Bookingstatus.PENDING,
                     };
 
@@ -67,7 +70,7 @@ namespace AeroFlex.Repository.Implementations
                                 DateOfBirth=kvp.Value.DateOfBirth,
                                 PassengerType = kvp.Value.PassengerType,
                                 BookingId = booking.BookingId,
-                                PassengerStatus=PassengerStatus.CONFIRMED
+                                PassengerStatus=PassengerStatus.PENDING
                             };
 
                             _context.Passengers.Add(Passenger);

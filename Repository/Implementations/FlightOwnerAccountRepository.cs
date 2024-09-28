@@ -81,7 +81,7 @@ namespace AeroFlex.Repository.Implementations
             }
             catch(Exception ex)
             {
-                transaction.RollbackAsync();
+                await transaction.RollbackAsync();
                 // Log the exception if needed
                 return new GeneralResponse(false, $"Error while signing in: {ex.Message}");
             }

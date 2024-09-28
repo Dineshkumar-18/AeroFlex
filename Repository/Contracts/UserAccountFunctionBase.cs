@@ -103,7 +103,7 @@ namespace AeroFlex.Repository.Contracts
                 {
                     HttpOnly = true,
                     Secure = true, // Set to true in production
-                    SameSite = SameSiteMode.Strict, // Adjust based on your security requirements
+                    SameSite = SameSiteMode.None, // Adjust based on your security requirements
                     Expires = DateTime.UtcNow.AddDays(1) // Set expiration
                 };
 

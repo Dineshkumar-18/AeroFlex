@@ -14,5 +14,15 @@ namespace AeroFlex.Dtos
         public string? Headquarters { get; set; }
         [Required]
         public string Country { get; set; }
+        [Required]
+        public string ContactNumber { get; set; }
+        [Required]
+        public string Email { get; set; }
+        [Required]
+        public DateOnly FoundedYear { get; set; }
+        [Required]
+        public string WebsiteUrl { get; set; }
+        [Required]
+        public string AirlineLogo { get; set; }
     }
 }

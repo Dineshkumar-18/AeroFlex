@@ -18,6 +18,10 @@ namespace AeroFlex.Models
         [Required]
         public int CancellationFeeId { get; set; }
         [Required]
+        public decimal CancellationCharge {  get; set; }
+        [Required]
+        public decimal PlatformAndServiceCharge { get; set; }
+        [Required]
         public decimal RefundAmount { get; set; }
         [Required]
         public DateTime CancelledTime { get; set; }

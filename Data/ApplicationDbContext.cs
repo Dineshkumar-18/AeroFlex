@@ -266,7 +266,14 @@ namespace AeroFlex.Data
                 .WithMany(r=>r.UserRoleMappings)
                 .HasForeignKey(urm => urm.RoleId);
 
-        }
+
+			modelBuilder.Entity<Ticket>()
+				.HasOne(t => t.Booking)
+				.WithMany(b => b.Tickets)
+				.HasForeignKey(t => t.BookingId)
+				.OnDelete(DeleteBehavior.Restrict);
+
+		}
 
     }
 

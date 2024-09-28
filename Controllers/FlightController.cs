@@ -52,7 +52,7 @@ namespace AeroFlex.Controllers
 
         [HttpPost]
         [Route("addSchedule")]
-        public async Task<ActionResult> AddFlightSchedule([FromQuery] int flightId, [FromBody] FlightScheduleDTO addSchedule)
+        public async Task<ActionResult> AddFlightSchedule([FromQuery] int flightId, [FromBody] AddFlightScheduleDto addSchedule)
         {
             if (!ModelState.IsValid) return BadRequest("Model is invalid");
 
@@ -129,7 +129,7 @@ namespace AeroFlex.Controllers
 
         [HttpPost]
         [Route("add-classType-pricing/{flightScheduleId}")]
-        public async Task<ActionResult> SetFlightScheduleClassTypePricing(int flightScheduleId, List<SeatTypePriceDto> seatTypePricing)
+        public async Task<ActionResult> SetFlightScheduleClassTypePricing(int flightScheduleId, Dictionary<string, List<decimal>> seatTypePricing)
         {
             if (!ModelState.IsValid) return BadRequest("Model is invalid");
             var schedule = await context.FlightsSchedules.FindAsync(flightScheduleId);
@@ -147,7 +147,7 @@ namespace AeroFlex.Controllers
 
         [HttpPost]
         [Route("add-seat-pricing/{flightScheduleId}")]
-        public async Task<ActionResult> SetSeatPricing(int flightScheduleId, List<SeatDto> seatDto)
+        public async Task<ActionResult> SetSeatPricing(int flightScheduleId, SeatDto seatDto)
         {
             if (!ModelState.IsValid) return BadRequest("Model is invalid");
             var schedule = await context.FlightsSchedules.FindAsync(flightScheduleId);
@@ -156,7 +156,7 @@ namespace AeroFlex.Controllers
             {
                 return BadRequest("Invalid flight schedule.");
             }
-            var response = await seatService.AddSeatPricing(seatDto, flightScheduleId);
+            var response = await seatService.AddSeatPricingWithPattern(seatDto, flightScheduleId);
 
             if (!response.flag) StatusCode(StatusCodes.Status500InternalServerError, response.message);
 

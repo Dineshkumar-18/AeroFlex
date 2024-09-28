@@ -6,7 +6,7 @@ namespace AeroFlex.Repository.Contracts
 {
     public interface IFlight
     {
-        Task<GeneralResponse> AddFlightSchedule(FlightScheduleDTO FlgihtSchedule,int flightId);
+        Task<GeneralResponse> AddFlightSchedule(AddFlightScheduleDto FlgihtSchedule,int flightId);
         Task<GeneralResponse> AddFlight(AddFlightDto addFlight,int airlineId);
     }
 }
