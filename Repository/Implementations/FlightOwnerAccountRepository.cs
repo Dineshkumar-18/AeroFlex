@@ -9,19 +9,21 @@ using Microsoft.Extensions.Options;
 
 namespace AeroFlex.Repository.Implementations
 {
-    public class FlightOwnerAccountRepository : UserAccountFunctionBase
+    public class FlightOwnerAccountRepository : UserAccountFunctionBase, IFlightOwnerAccount
     {
-        public FlightOwnerAccountRepository(ApplicationDbContext context, IOptions<JwtSection> config) : base(context, config)
+        public FlightOwnerAccountRepository(ApplicationDbContext context, IOptions<JwtSection> config, IHttpContextAccessor httpContextAccessor) : base(context, config, httpContextAccessor)
         {
 
         }
 
-        public override async Task<GeneralResponse> CreateAsync<T>(T reg)
+        public override async Task<GeneralResponse> CreateAsync(Register register)
         {
-            if (reg is FlightOwnerRegister register)
-            {
-                if (register is null) return new GeneralResponse(false, "Model is invalid");
+            
+           if (register is null) return new GeneralResponse(false, "Model is invalid");
 
+          using var transaction=await _context.Database.BeginTransactionAsync();
+            try
+            {
                 var checkUserByEmail = await FindByEmail(register.Email);
                 if (checkUserByEmail is not null)
                 {
@@ -41,25 +43,48 @@ namespace AeroFlex.Repository.Implementations
                     FirstName = register.FirstName,
                     LastName = register.LastName,
                     PhoneNumber = register.PhoneNumber,
-                    CompanyName = register.CompanyName,
-                    CompanyRegistrationNumber = register.CompanyRegistrationNumber,
-                    CompanyPhoneNumber = register.CompanyPhoneNumber,
-                    CompanyEmail = register.CompanyEmail,
-                    OperatingLicenseNumber = register.OperatingLicenseNumber,
                 });
 
 
-                var userRole = await _context.Roles.FirstOrDefaultAsync(r => r.RoleName.Equals(Roles.FlightOwner.ToString()));
-                if (userRole == null) return new GeneralResponse(false, "User role not found");
+                var roles = await _context.Roles
+                .Where(r => r.RoleName.Equals(Roles.FlightOwner.ToString()) || r.RoleName.Equals(Roles.User.ToString()))
+                .ToListAsync();
 
-                var userRoleMapping = await AddToDatabase(new UserRoleMapping
+                if (!roles.Any()) return new GeneralResponse(false, "Roles not found");
+
+                //ensure both roles are found
+                var FlightOwnerRole = roles.FirstOrDefault(r => r.RoleName.Equals(Roles.FlightOwner.ToString()));
+                var UserRole = roles.FirstOrDefault(r => r.RoleName.Equals(Roles.User.ToString()));
+
+                if (FlightOwnerRole == null) return new GeneralResponse(false, "FlightOwner role not found");
+                if (UserRole == null) return new GeneralResponse(false, "User role not found");
+
+                var roleMappings = new List<UserRoleMapping>
                 {
-                    UserId = user.UserId,
-                    RoleId = userRole.RoleId
-                });
+                     new UserRoleMapping
+                    {
+                        UserId = user.UserId,
+                        RoleId = FlightOwnerRole.RoleId
+                    },
+                    new UserRoleMapping
+                    {
+                        UserId = user.UserId,
+                        RoleId = UserRole.RoleId
+                    }
+               };
+
+                var mappedRoles = await AddToDatabaseRange(roleMappings);
+                if (mappedRoles.Count != 2) return new GeneralResponse(false, "Error while role mapping");
+
+                await transaction.CommitAsync();
                 return new GeneralResponse(true, "Flight Owner Registered Successfully");
             }
-            return new GeneralResponse(false, "Model is invalid");
+            catch(Exception ex)
+            {
+                await transaction.RollbackAsync();
+                // Log the exception if needed
+                return new GeneralResponse(false, $"Error while signing in: {ex.Message}");
+            }
         }
 
 
@@ -67,43 +92,58 @@ namespace AeroFlex.Repository.Implementations
         public override async Task<LoginResponse> SignInAsync(Login login)
         {
             if (login == null) return new LoginResponse(false, "Model is invalid");
-            User? user = null;
-            var userEmail = await FindByEmail(login.Email);
-            var userName = await FindByUserName(login.Email);
-            if (userEmail is not null) user = userEmail;
-            else if (userName is not null) user = userName;
 
-            if (user is null)
+            using var transaction = await _context.Database.BeginTransactionAsync();
+
+            try
             {
-                return new LoginResponse(false, "Username or Email doesnot exist");
-            }
-            if ((user.Email == login.Email || user.UserName == login.Email) && BCrypt.Net.BCrypt.Verify(login.Password, user.Password))
-            {
-                var role = await FindUserRole(user.UserId);
-                var roleName = await FindRoleName(role!.RoleId);
-
-                string jwtToken = GenerateJwtToken(user, roleName!.RoleName);
-                string refreshToken = GenerateRefreshToken();
-
-                var refreshTokenInfo = await _context.RefreshTokenInfos.FirstOrDefaultAsync(rt => rt.UserId == user.UserId);
-
-                if (refreshTokenInfo is not null)
+                var user = await _context.FlightOwners
+                          .Include(u => u.RoleMappings)
+                          .ThenInclude(urm => urm.Role)
+                          .FirstOrDefaultAsync(u => u.Email == login.Email || u.UserName == login.Email);
+                if (user == null)
                 {
-                    refreshTokenInfo.RefreshToken = refreshToken;
-                    await _context.SaveChangesAsync();
+                    return new LoginResponse(false, "Username or Email doesnot exist");
+                }
+                else if (!BCrypt.Net.BCrypt.Verify(login.Password, user.Password))
+                {
+                    return new LoginResponse(false, "Username or Password is invalid");
                 }
                 else
                 {
-                    await AddToDatabase(new RefreshTokenInfo
-                    {
-                        RefreshToken = refreshToken,
-                        UserId = user.UserId,
-                    });
-                }
+                    var roleNames = user.RoleMappings.Select(urm => urm.Role.RoleName).ToList();
 
-                return new LoginResponse(true, "Login succeffully", jwtToken, refreshToken);
+                    string jwtToken = GenerateJwtToken(user, roleNames);
+                    AppendCookie(jwtToken);
+                    string refreshToken = GenerateRefreshToken();
+
+                    var refreshTokenInfo = await _context.RefreshTokenInfos.FirstOrDefaultAsync(rt => rt.UserId == user.UserId);
+
+                    if (refreshTokenInfo is not null)
+                    {
+                        refreshTokenInfo.RefreshToken = refreshToken;
+                        await _context.SaveChangesAsync();
+                    }
+                    else
+                    {
+                        await AddToDatabase(new RefreshTokenInfo
+                        {
+                            RefreshToken = refreshToken,
+                            ExpirationTime = DateTime.Now.AddDays(1),
+                            UserId = user.UserId,
+                        });
+                    }
+                    await transaction.CommitAsync();
+                    return new LoginResponse(true, "Login succeffully", jwtToken, refreshToken);
+                }
             }
-            return new LoginResponse(false, "Email or Password is invalid");
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                // Log the exception if needed
+                return new LoginResponse(false, $"Error while signing in: {ex.Message}");
+            }
+
 
         }
     }

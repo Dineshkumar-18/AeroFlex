@@ -7,102 +7,95 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using AeroFlex.Data;
 using AeroFlex.Models;
+using AeroFlex.Dtos;
+using AeroFlex.Repository.Contracts;
+using Microsoft.AspNetCore.Authorization;
 
 namespace AeroFlex.Controllers
 {
+
     [Route("api/[controller]")]
     [ApiController]
-    public class CurrenciesController : ControllerBase
+    [Authorize]
+    public class CurrencyController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
+        private readonly ICurrencyRepository _currencyRepository;
 
-        public CurrenciesController(ApplicationDbContext context)
+        public CurrencyController(ICurrencyRepository currencyRepository)
         {
-            _context = context;
+            _currencyRepository = currencyRepository;
         }
 
-        // GET: api/Currencies
+        // GET: api/Currency
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Currency>>> GetCurrencies()
+        public async Task<ActionResult<IEnumerable<CurrencyDto>>> GetCurrencies()
         {
-            return await _context.Currencies.ToListAsync();
+            var currencies = await _currencyRepository.GetAllCurrenciesAsync();
+            return Ok(currencies);
         }
 
-        // GET: api/Currencies/5
+        // GET: api/Currency/{id}
         [HttpGet("{id}")]
-        public async Task<ActionResult<Currency>> GetCurrency(int id)
+        public async Task<ActionResult<CurrencyDto>> GetCurrency(int id)
         {
-            var currency = await _context.Currencies.FindAsync(id);
+            var currency = await _currencyRepository.GetCurrencyByIdAsync(id);
 
             if (currency == null)
             {
                 return NotFound();
             }
 
-            return currency;
+            return Ok(currency);
         }
 
-        // PUT: api/Currencies/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutCurrency(int id, Currency currency)
+        // GET: api/Currency/country/{countryName}
+        [HttpGet("country/{countryName}")]
+        public async Task<ActionResult<CurrencyDto>> GetCurrencyByCountry(string countryName)
         {
-            if (id != currency.CurrencyId)
+            var currency = await _currencyRepository.GetCurrencyByCountryAsync(countryName);
+
+            if (currency == null)
             {
-                return BadRequest();
+                return NotFound();
             }
 
-            _context.Entry(currency).State = EntityState.Modified;
+            return Ok(currency);
+        }
 
-            try
+        // POST: api/Currency
+        [HttpPost]
+        public async Task<ActionResult<CurrencyDto>> PostCurrency(CurrencyDto currencyDto)
+        {
+            var createdCurrency = await _currencyRepository.CreateCurrencyAsync(currencyDto);
+            return CreatedAtAction(nameof(GetCurrency), new { id = createdCurrency.CurrencyCode }, createdCurrency);
+        }
+
+        // PUT: api/Currency/{id}
+        [HttpPut("{id}")]
+        [Authorize(Roles="Admin")]
+        public async Task<IActionResult> PutCurrency(int id, CurrencyDto currencyDto)
+        {
+            var updatedCurrency = await _currencyRepository.UpdateCurrencyAsync(id, currencyDto);
+            if (updatedCurrency == null)
             {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!CurrencyExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                return NotFound();
             }
 
             return NoContent();
         }
 
-        // POST: api/Currencies
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost]
-        public async Task<ActionResult<Currency>> PostCurrency(Currency currency)
-        {
-            _context.Currencies.Add(currency);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetCurrency", new { id = currency.CurrencyId }, currency);
-        }
-
-        // DELETE: api/Currencies/5
+        // DELETE: api/Currency/{id}
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteCurrency(int id)
         {
-            var currency = await _context.Currencies.FindAsync(id);
-            if (currency == null)
+            var deleted = await _currencyRepository.DeleteCurrencyAsync(id);
+            if (!deleted)
             {
                 return NotFound();
             }
 
-            _context.Currencies.Remove(currency);
-            await _context.SaveChangesAsync();
-
             return NoContent();
-        }
-
-        private bool CurrencyExists(int id)
-        {
-            return _context.Currencies.Any(e => e.CurrencyId == id);
         }
     }
 }

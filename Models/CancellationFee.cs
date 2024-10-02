@@ -18,6 +18,6 @@ namespace AeroFlex.Models
         [ForeignKey("FlightScheduleId")]
         public virtual FlightSchedule FlightSchedule { get; set; }
 
-        public virtual CancellationInfo CancellationInfo { get; set; }
+        public ICollection<CancellationInfo> CancellationInfo { get; set; }
     }
 }

@@ -6,6 +6,7 @@ namespace AeroFlex.Models
 {
     public enum FlightStatus
     {
+        SCHEDULING_PROCESS=0,
         SCHEDULED = 1,
         ONTIME = 2,
         DELAYED = 3,
@@ -25,7 +26,7 @@ namespace AeroFlex.Models
         public int FlightScheduleId { get; set; }
         [Required]
         public int FlightId { get; set; }
-        [Required]
+        [Required]  
         public int DepartureAirportId { get; set; }
         [Required]
         public int ArrivalAirportId { get; set; }
@@ -34,9 +35,10 @@ namespace AeroFlex.Models
         [Required]
         public DateTime ArrivalTime { get; set; }
         [Required]
-        public TimeOnly Duration { get; set; }
+        [Column(TypeName = "time")]
+        public TimeSpan Duration { get; set; }
         [Required]
-        public FlightStatus FlightStatus { get; set; }
+        public FlightStatus FlightStatus { get; set; }=FlightStatus.SCHEDULING_PROCESS;
         [Required]
         public DateTime ScheduledAt { get; set; }=DateTime.Now;
         public DateTime? UpdatedAt {  get; set; }
@@ -44,9 +46,6 @@ namespace AeroFlex.Models
         public ICollection<SeatTypePricing> SeatTypePricing { get; set; }
         public ICollection<Booking> Bookings { get; set; }
         public ICollection<FlightScheduleClass> FlightScheduleClasses { get; set; }
-
-        public ICollection<FlightSegment> FlightSegments { get; set; }
-
 
         [ForeignKey("FlightId")]
         public virtual Flight Flight { get; set; }

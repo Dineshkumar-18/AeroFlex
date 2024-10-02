@@ -27,8 +27,6 @@ namespace AeroFlex.Data
         public DbSet<FlightScheduleClass> FlightScheduleClasses { get; set; }
         public DbSet<FlightSchedule> FlightsSchedules { get; set; }
         public DbSet<FlightTax> FlightTaxes { get; set; }
-        public DbSet<FlightSegment> FlightSegments { get; set; }
-        public DbSet<Itinerary> Itineraries { get; set; }
         public DbSet<Passenger> Passengers { get; set; }    
         public DbSet<Payment> Payments { get; set; }
         public DbSet<Refund> Refunds { get; set; }
@@ -38,6 +36,12 @@ namespace AeroFlex.Data
 		public DbSet<SeatTypePricing> SeatTypePricings { get; set; }
         public DbSet<Ticket> Tickets { get; set; }
 		public DbSet<RefreshTokenInfo> RefreshTokenInfos { get; set; }
+
+		public DbSet<CountryTax> CountryTaxes { get; set; }
+
+		public DbSet<SeatLayout> SeatLayouts { get; set; }
+
+		public DbSet<UnavailableSeats> UnavailableSeats { get; set; }
 
 
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -154,10 +158,6 @@ namespace AeroFlex.Data
 				.WithMany(fc => fc.FlightTaxes)
 				.HasForeignKey(ft => ft.ClassId);
 
-			modelBuilder.Entity<FlightTax>()
-				.HasOne(ft => ft.Currency)
-				.WithMany(c => c.FlightTaxes)
-				.HasForeignKey(ft => ft.CurrencyId);
 
 
 
@@ -183,23 +183,15 @@ namespace AeroFlex.Data
 				.OnDelete(DeleteBehavior.Restrict);
 
 
-			//Itinerary to Start airport relationship
-
-			modelBuilder.Entity<Itinerary>()
-				.HasOne(i => i.StartAirport)
-				.WithMany(a => a.StartJourney)
-				.HasForeignKey(fs => fs.StartAirportId)
-				.OnDelete(DeleteBehavior.Restrict);
-
-			//Itinerary to End airport relationship
-
-			modelBuilder.Entity<Itinerary>()
-				.HasOne(i => i.EndAirport)
-				.WithMany(a => a.EndJourney)
-				.HasForeignKey(fs => fs.EndAirportId)
-				.OnDelete(DeleteBehavior.Restrict);
-
-			//FlightTax model 
+			//
+			//
+			//
+			//
+			//
+			//
+			//
+			//
+			//model 
 			modelBuilder.Entity<FlightTax>(entity =>
 			{
 
@@ -213,10 +205,7 @@ namespace AeroFlex.Data
 				.HasForeignKey(ft => ft.ClassId)
 				.OnDelete(DeleteBehavior.Restrict);
 
-				entity.HasOne(ft => ft.Currency)
-				.WithMany(c => c.FlightTaxes)
-				.HasForeignKey(ft => ft.CurrencyId)
-				.OnDelete(DeleteBehavior.Restrict);
+
 
 			});
 
@@ -240,11 +229,11 @@ namespace AeroFlex.Data
 			{
 				entity.HasOne(ci=>ci.FlightSchedule)
 				.WithMany(fs=>fs.CancellationInfos)
-				.HasForeignKey(ci=>ci.CancellationId)
+				.HasForeignKey(ci=>ci.FlightScheduleId)
 				.OnDelete(DeleteBehavior.NoAction);
 
 				entity.HasOne(ci => ci.CancelledSeat)
-				.WithOne(s => s.CancellationInfo)
+				.WithMany(s => s.CancellationInfo)
 				.OnDelete(DeleteBehavior.NoAction);
 
 				entity.HasOne(ci=>ci.Passenger)
@@ -252,13 +241,44 @@ namespace AeroFlex.Data
 				.OnDelete(DeleteBehavior.Restrict);
 
 				entity.HasOne(ci => ci.CancellationFee)
-				.WithOne(cf => cf.CancellationInfo)
+				.WithMany(cf => cf.CancellationInfo)
 				.OnDelete(DeleteBehavior.Restrict);
 
             });
 
+			modelBuilder.Entity<Refund>(entity =>
+			{
+				entity.HasOne(r => r.Booking)
+				.WithMany(b => b.Refunds)
+				.HasForeignKey(r => r.BookingId)
+				.OnDelete(deleteBehavior: DeleteBehavior.Restrict);
+
+			});
+
+
+
+                modelBuilder.Entity<UserRoleMapping>()
+            .HasKey(urm => new { urm.UserId, urm.RoleId });
+
+            modelBuilder.Entity<UserRoleMapping>()
+                .HasOne(urm => urm.User)
+                .WithMany(u => u.RoleMappings)
+                .HasForeignKey(urm => urm.UserId);
+
+            modelBuilder.Entity<UserRoleMapping>()
+                .HasOne(urm => urm.Role)
+                .WithMany(r=>r.UserRoleMappings)
+                .HasForeignKey(urm => urm.RoleId);
+
+
+			modelBuilder.Entity<Ticket>()
+				.HasOne(t => t.Booking)
+				.WithMany(b => b.Tickets)
+				.HasForeignKey(t => t.BookingId)
+				.OnDelete(DeleteBehavior.Restrict);
+
 		}
 
-	}
+    }
 
 }

@@ -7,17 +7,16 @@ namespace AeroFlex.Models
     {
         [Key]
         public int RefundId { get; set; }
+        [Required] 
+        public int UserId { get; set; }
         [Required]
-        public int CancellationId { get; set; }
+        public int BookingId { get; set; }
+        [Required]
         public decimal RefundAmount { get; set; }
-        [Required]
-        public DateTime RefundDate { get; set; }
-        [Required]
-        [MaxLength(255)]
-        public string RefundReason { get; set; }
-        public PaymentStatus RefundStatus { get; set; }
+        public DateTime? RefundDate { get; set; }
+        public PaymentStatus RefundStatus { get; set; }=PaymentStatus.PENDING;
 
-        [ForeignKey("CancellationId")]
-        public virtual CancellationInfo CancellationInfo { get; set; }
+        [ForeignKey("BookingId")]
+        public virtual Booking Booking { get; set; }
     }
 }

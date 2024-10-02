@@ -21,6 +21,7 @@ namespace AeroFlex.Models
         public DateTime JoinedDate { get; set; } = DateTime.Now;
         public int? TotalFlightsManaged { get; set; }
         public string? SupportContact { get; set; }
+        public string? ProfilePictureUrl { get; set; }
         [Required]
         public bool IsApproved { get; set; }=false;
         [Required]

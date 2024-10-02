@@ -29,6 +29,7 @@ namespace AeroFlex.Models
         public string PhoneNumber { get; set; }
         public int? AddressId { get; set; }
         public DateOnly? DateOfBirth { get; set; }
+        public string? UserProfile { get; set; }
         [Required]
         public DateTime RegisterationDate { get; set; }= DateTime.Now;
         public DateTime? LastLogin { get; set; }
@@ -39,9 +40,9 @@ namespace AeroFlex.Models
         [ForeignKey("AddressId")]
         public virtual Address Address { get; set; }
 
-        public virtual UserRoleMapping RoleMapping { get; set; }
+        public ICollection<UserRoleMapping> RoleMappings { get; set; }
         public ICollection<Booking> Bookings { get; set; }
-
+        public ICollection<Refund> Refunds { get; set; }
         public virtual RefreshTokenInfo RefreshTokenInfo { get; set; }
     }
 }

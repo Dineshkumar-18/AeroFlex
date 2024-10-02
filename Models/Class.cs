@@ -10,5 +10,7 @@ namespace AeroFlex.Models
         [MaxLength(30)]
         public string ClassName { get; set; }
         public ICollection<FlightTax> FlightTaxes { get; set; }
+
+        public ICollection<FlightScheduleClass> FlightScheduleClasses { get; set; }
     }
 }

@@ -24,6 +24,8 @@ namespace AeroFlex.Models
         [Required]
         public int SeatTypePricingId { get; set; }
         [Required]
+        public decimal TaxAmount { get; set; }
+        [Required]
         public decimal SeatPrice { get; set; }
         [Required]
         public SeatStatus Status { get; set; }=SeatStatus.AVAILABLE;
@@ -45,6 +47,6 @@ namespace AeroFlex.Models
 
         public virtual Ticket Ticket { get; set; }
 
-        public virtual CancellationInfo CancellationInfo { get; set; }
+        public ICollection<CancellationInfo> CancellationInfo { get; set; }
     }
 }

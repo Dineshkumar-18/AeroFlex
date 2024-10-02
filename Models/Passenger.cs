@@ -12,6 +12,7 @@ namespace AeroFlex.Models
 
     public enum PassengerStatus
     {
+        PENDING=0,
         CONFIRMED=1,
         CANCELLED=2
     }
@@ -33,7 +34,6 @@ namespace AeroFlex.Models
         public DateOnly DateOfBirth { get; set; }
         [Required]
         public PassengerType PassengerType { get; set; }
-
         public PassengerStatus PassengerStatus { get; set; }
 
         [ForeignKey("BookingId")]

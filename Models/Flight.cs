@@ -3,11 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AeroFlex.Models
 {
-    public enum FlightType
-    {
-        DOMESTIC = 1,
-        INTERNATIONAL = 2
-    }
+    
     public class Flight
     {
         [Key]
@@ -20,8 +16,11 @@ namespace AeroFlex.Models
         [Required]
         [MaxLength(30)]
         public string AirCraftType { get; set; }
+
         [Required]
-        public FlightType FlightType { get; set; }
+        public int TotalSeatColumn { get; set; }
+        [Required]
+        public TravelType FlightType { get; set; }
         [Required]
         public int DepartureAirportId { get; set; }
         [Required]
@@ -40,6 +39,9 @@ namespace AeroFlex.Models
 
 		[ForeignKey("ArrivalAirportId")]
 		public virtual Airport ArrivalAirport { get; set; }
+        public ICollection<UnavailableSeats> UnavailableSeats { get; set; }
+
+        public ICollection<SeatLayout> SeatLayouts { get; set; }
 
 	}
 }

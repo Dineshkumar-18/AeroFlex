@@ -5,10 +5,11 @@ namespace AeroFlex.Models
 {
     public enum Bookingstatus
     {
-         CONFIRMED=1,
-         PARTIALLY_CANCELLED=2,
-         CANCELLED=3,
-         REFUNDED=4
+         PENDING=1,
+         CONFIRMED=2,
+         PARTIALLY_CANCELLED=3,
+         CANCELLED=4,
+         REFUNDED=5
     }
     public class Booking
     {
@@ -25,6 +26,10 @@ namespace AeroFlex.Models
         public DateTime BookingDate { get; set; }
         [Required]
         public int FlightPricingId { get; set; }
+
+        [Required]
+        public decimal TaxAmount { get; set; }
+
         [Required]
         public decimal TotalAmount { get; set; }
         [Required]
@@ -36,10 +41,10 @@ namespace AeroFlex.Models
 
         [ForeignKey("FlightPricingId")]
         public virtual FlightPricing FlightPricing { get; set; }
+        public ICollection<Ticket> Tickets { get; set; }
         public ICollection<Passenger> Passengers { get; set; }
         public ICollection<Seat> Seats { get; set; }
-        public ICollection<Ticket> Ticket { get; set; }
-
+        public ICollection<Refund> Refunds { get; set; }
         public virtual Payment Payment { get; set; }
 
     }
