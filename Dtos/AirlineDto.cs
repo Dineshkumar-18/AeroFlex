@@ -4,6 +4,7 @@ namespace AeroFlex.Dtos
 {
     public class AirlineDto
     {
+        public int AirlineId { get; set; }
         [Required]
         [MaxLength(100)]
         public string AirlineName { get; set; }

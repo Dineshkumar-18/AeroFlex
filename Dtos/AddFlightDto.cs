@@ -6,15 +6,17 @@ namespace AeroFlex.Dtos
     public class AddFlightDto
     {
         [Required]
+        public int AirlineId { get; set; }
+        [Required]
         public string FlightNumber { get; set; }
         [Required]
         public string AirCraftType { get; set; }
         [Required]
         public string FlightType { get; set; }
         [Required]
-        public string DepartAirport { get; set; }
+        public int DepartAirport { get; set; }
         [Required]
-        public string ArrivalAirport { get; set; }
+        public int ArrivalAirport { get; set; }
         [Required]
         public int TotalSeats { get; set; }
         [Required]

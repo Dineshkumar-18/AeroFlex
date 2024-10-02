@@ -39,6 +39,10 @@ namespace AeroFlex.Data
 
 		public DbSet<CountryTax> CountryTaxes { get; set; }
 
+		public DbSet<SeatLayout> SeatLayouts { get; set; }
+
+		public DbSet<UnavailableSeats> UnavailableSeats { get; set; }
+
 
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{

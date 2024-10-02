@@ -82,7 +82,7 @@ namespace AeroFlex.Controllers
 
         // GET: api/Airlines/{id}
         [HttpGet("{id}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,FlightOwner")]
         public async Task<ActionResult<AirlineDto>> GetAirline(int id)
         {
             var airline = await _airlineRepository.GetAirlineByIdAsync(id);
@@ -163,6 +163,9 @@ namespace AeroFlex.Controllers
             return NoContent();
         }
 
+       
+
+
         // Method to extract FlightOwnerId from JWT token
         private int? GetFlightOwnerIdFromToken()
         {
@@ -178,6 +181,7 @@ namespace AeroFlex.Controllers
 
             return int.TryParse(flightOwnerId, out var result) ? result : null;
         }
+
     }
 
 }

@@ -20,6 +20,7 @@ namespace AeroFlex.Repository.Implementations
         return await _context.Airlines
             .Select(a => new AirlineDto
             {
+                AirlineId=a.AirlineId,
                 AirlineName = a.AirlineName,
                 IataCode = a.IataCode,
                 Headquarters = a.Headquarters,
@@ -27,7 +28,7 @@ namespace AeroFlex.Repository.Implementations
             }).ToListAsync();
     }
 
-    public async Task<AirlineDto> GetAirlineByIdAsync(int id)
+    public async Task<Airline> GetAirlineByIdAsync(int id)
     {
         var airline = await _context.Airlines.FirstOrDefaultAsync(a => a.AirlineId == id);
 
@@ -36,13 +37,7 @@ namespace AeroFlex.Repository.Implementations
             return null;
         }
 
-        return new AirlineDto
-        {
-            AirlineName = airline.AirlineName,
-            IataCode = airline.IataCode,
-            Headquarters = airline.Headquarters,
-            Country = airline.Country
-        };
+            return airline;
     }
 
     public async Task<AirlineDto> CreateAirlineAsync(Airline airline)
@@ -52,6 +47,7 @@ namespace AeroFlex.Repository.Implementations
 
         return new AirlineDto
         {
+            AirlineId=airline.AirlineId,
             AirlineName = airline.AirlineName,
             IataCode = airline.IataCode,
             Headquarters = airline.Headquarters,
@@ -66,6 +62,7 @@ namespace AeroFlex.Repository.Implementations
 
         return new AirlineDto
         {
+            AirlineId=airline.AirlineId,
             AirlineName = airline.AirlineName,
             IataCode = airline.IataCode,
             Headquarters = airline.Headquarters,
@@ -88,11 +85,11 @@ namespace AeroFlex.Repository.Implementations
 
         public async Task<IEnumerable<AirlineDto>> GetAllAirlinesByFlightownerAsync(int? flightOwnerId)
         {
-            
-
+           
             return await _context.Airlines.Where(a=>a.FlightOwnerId==flightOwnerId)
             .Select(a => new AirlineDto
             {
+                AirlineId=a.AirlineId,
                 AirlineName = a.AirlineName,
                 IataCode = a.IataCode,
                 Headquarters = a.Headquarters,

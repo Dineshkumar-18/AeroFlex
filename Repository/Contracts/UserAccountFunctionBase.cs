@@ -85,7 +85,7 @@ namespace AeroFlex.Repository.Contracts
                 issuer: _config.Value.Issuer,
                 audience: _config.Value.Audience,
                 claims: claims,
-                expires: DateTime.Now.AddHours(1),
+                expires: DateTime.UtcNow.AddHours(1),
                 signingCredentials: credentials
              );
             return new JwtSecurityTokenHandler().WriteToken(jwtToken);
@@ -104,7 +104,7 @@ namespace AeroFlex.Repository.Contracts
                     HttpOnly = true,
                     Secure = true, // Set to true in production
                     SameSite = SameSiteMode.None, // Adjust based on your security requirements
-                    Expires = DateTime.UtcNow.AddDays(1) // Set expiration
+                    Expires = DateTime.UtcNow.AddHours(1) // Set expiration
                 };
 
                 httpContext.Response.Cookies.Append("AuthToken", jwtToken, cookieOptions);

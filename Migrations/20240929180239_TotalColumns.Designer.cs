@@ -4,6 +4,7 @@ using AeroFlex.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AeroFlex.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240929180239_TotalColumns")]
+    partial class TotalColumns
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -804,7 +807,8 @@ namespace AeroFlex.Migrations
 
                     b.HasKey("SeatLayoutId");
 
-                    b.HasIndex("FlightId");
+                    b.HasIndex("FlightId")
+                        .IsUnique();
 
                     b.ToTable("SeatLayouts");
                 });
@@ -887,10 +891,6 @@ namespace AeroFlex.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("UnavailableSeatsId"));
-
-                    b.Property<string>("ClassType")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("FlightId")
                         .HasColumnType("int");
@@ -1370,11 +1370,13 @@ namespace AeroFlex.Migrations
 
             modelBuilder.Entity("AeroFlex.Models.SeatLayout", b =>
                 {
-                    b.HasOne("AeroFlex.Models.Flight", null)
-                        .WithMany("SeatLayouts")
-                        .HasForeignKey("FlightId")
+                    b.HasOne("AeroFlex.Models.Flight", "Flight")
+                        .WithOne("SeatLayout")
+                        .HasForeignKey("AeroFlex.Models.SeatLayout", "FlightId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Flight");
                 });
 
             modelBuilder.Entity("AeroFlex.Models.SeatTypePricing", b =>
@@ -1548,7 +1550,8 @@ namespace AeroFlex.Migrations
                 {
                     b.Navigation("FlightSchedules");
 
-                    b.Navigation("SeatLayouts");
+                    b.Navigation("SeatLayout")
+                        .IsRequired();
 
                     b.Navigation("UnavailableSeats");
                 });

@@ -5,9 +5,9 @@ namespace AeroFlex.Dtos
     public class AddFlightScheduleDto
     {
         [Required]
-        public string DepartureAirportName { get; set; }
+        public int DepartureAirportId { get; set; }
         [Required]
-        public string ArrivalAirportName { get; set; }
+        public int ArrivalAirportId { get; set; }
         [Required]
         public DateTime DepartureTime { get; set; }
         [Required]

@@ -18,9 +18,12 @@ namespace AeroFlex.Controllers
     {
         [HttpPost]
         [Route("add")]
-        public async Task<ActionResult> AddFlight(AddFlightDto addFlightDto)
+        public async Task<ActionResult> AddFlight([FromBody] AddFlightDto addFlightDto)
         {
-            if (!ModelState.IsValid) return BadRequest("Model is invalid");
+            if(!ModelState.IsValid)
+            {
+                return BadRequest("model mismatch");
+            }
 
             var FlightOwnerId = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value!;
             var Role = HttpContext.User.FindFirst(ClaimTypes.Role)?.Value;
@@ -37,7 +40,7 @@ namespace AeroFlex.Controllers
             var flightowner = await context.FlightOwners.FirstOrDefaultAsync(fo => fo.UserId == int.Parse(FlightOwnerId));
             if (!flightowner.IsApproved) return BadRequest("Admin approval is required");
 
-            var airline = await context.Airlines.FirstOrDefaultAsync(a => a.FlightOwnerId == int.Parse(FlightOwnerId));
+            var airline = await context.Airlines.FirstOrDefaultAsync(a => a.AirlineId==addFlightDto.AirlineId);
 
             if (airline == null) { return BadRequest("Airline not found"); }
 
@@ -49,12 +52,52 @@ namespace AeroFlex.Controllers
             return Ok(flight);
         }
 
+        [HttpPut]
+        [Route("update/{flightId}")]
+        public async Task<ActionResult> UpdateFlight(int flightId, [FromBody] AddFlightDto addFlightDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest("model mismatch");
+            }
+
+            var FlightOwnerId = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value!;
+            var Role = HttpContext.User.FindFirst(ClaimTypes.Role)?.Value;
+
+            if (string.IsNullOrEmpty(FlightOwnerId.ToString()))
+            {
+                return Unauthorized("FlightOwner claim is missing in the token.");
+            }
+
+            if (string.IsNullOrEmpty(Role))
+            {
+                return Forbid();
+            }
+            var flightowner = await context.FlightOwners.FirstOrDefaultAsync(fo => fo.UserId == int.Parse(FlightOwnerId));
+            if (!flightowner.IsApproved) return BadRequest("Admin approval is required");
+
+            var airline = await context.Airlines.FirstOrDefaultAsync(a => a.AirlineId == addFlightDto.AirlineId);
+
+            if (airline == null) { return BadRequest("Airline not found"); }
+
+            var flight = await flightRepository.UpdateFlight(addFlightDto, airline.AirlineId,flightId);
+
+            if (!flight.flag) { return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Couldn't update the flight" }); }
+
+
+            return Ok(flight);
+        }
+
+
 
         [HttpPost]
         [Route("addSchedule")]
         public async Task<ActionResult> AddFlightSchedule([FromQuery] int flightId, [FromBody] AddFlightScheduleDto addSchedule)
         {
-            if (!ModelState.IsValid) return BadRequest("Model is invalid");
+            var errors = ModelState.Values.SelectMany(v => v.Errors)
+                                      .Select(e => e.ErrorMessage)
+                                      .ToList();
+            return BadRequest(new { Errors = errors });
 
             var FlightOwnerId = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value!;
             var Role = HttpContext.User.FindFirst(ClaimTypes.Role)?.Value;
@@ -188,6 +231,33 @@ namespace AeroFlex.Controllers
                 return Ok("FlightSchedule status is updated to schedule it will be shown for the user");
             }
             return BadRequest("Already Scheduled");
+        }
+
+        [HttpGet]
+        [Route("flightsByAirline/{id}")]
+        public async Task<ActionResult> FlightsByAirlline(int id)
+        {
+            var flights = await context.Flights.Where(f => f.AirlineId == id).ToListAsync();
+
+
+            if (flights == null)
+            {
+                BadRequest("No flights");
+            }
+            return Ok(flights);
+        }
+
+        [HttpGet]
+        [Route("flight/{id}")]
+        public async Task<ActionResult> GetFlightById(int id)
+        {
+            var flights = await context.Flights.FirstOrDefaultAsync(f => f.FlightId == id);
+
+            if (flights == null)
+            {
+                BadRequest("No flights");
+            }
+            return Ok(flights);
         }
     }
 }

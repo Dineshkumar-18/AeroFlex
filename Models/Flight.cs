@@ -39,6 +39,9 @@ namespace AeroFlex.Models
 
 		[ForeignKey("ArrivalAirportId")]
 		public virtual Airport ArrivalAirport { get; set; }
+        public ICollection<UnavailableSeats> UnavailableSeats { get; set; }
+
+        public ICollection<SeatLayout> SeatLayouts { get; set; }
 
 	}
 }
