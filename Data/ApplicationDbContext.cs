@@ -43,6 +43,8 @@ namespace AeroFlex.Data
 
 		public DbSet<UnavailableSeats> UnavailableSeats { get; set; }
 
+		public DbSet<FlightScheduleLayout> FlightScheduleLayouts { get; set; }
+		public DbSet<FlightScheduleUnavailableSeats> FlightScheduleUnavailableSeats { get; set; }
 
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{

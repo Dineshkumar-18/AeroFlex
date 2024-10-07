@@ -8,7 +8,5 @@ namespace AeroFlex.Dtos
         public string ClassName { get; set; }
         [Required]
         public decimal BasePrice { get; set; }
-        [Required]
-        public int TotalSeats { get; set; }
     }
 }

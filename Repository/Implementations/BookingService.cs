@@ -84,7 +84,7 @@ namespace AeroFlex.Repository.Implementations
                             await _context.SaveChangesAsync();
                         }
                     await transaction.CommitAsync();
-                    return new GeneralResponse(true, "Booked successfully");
+                    return new GeneralResponse(true, booking.BookingId.ToString());
                 }
                 catch (Exception ex)
                 {

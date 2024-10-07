@@ -38,6 +38,8 @@ namespace AeroFlex.Models
         [Column(TypeName = "time")]
         public TimeSpan Duration { get; set; }
         [Required]
+        public int TotalSeats { get; set; }
+        [Required]
         public FlightStatus FlightStatus { get; set; }=FlightStatus.SCHEDULING_PROCESS;
         [Required]
         public DateTime ScheduledAt { get; set; }=DateTime.Now;
@@ -58,5 +60,9 @@ namespace AeroFlex.Models
 
         public ICollection<FlightPricing>  FlightPricing { get; set; }
         public ICollection<CancellationInfo> CancellationInfos { get; set; }
-	}
+
+        public ICollection<FlightScheduleUnavailableSeats> FlightScheduleUnavailableSeats { get; set; }
+
+        public ICollection<FlightScheduleLayout> FlightScheduleLayouts { get; set; }
+    }
 }

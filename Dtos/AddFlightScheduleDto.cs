@@ -12,5 +12,7 @@ namespace AeroFlex.Dtos
         public DateTime DepartureTime { get; set; }
         [Required]
         public DateTime ArrivalTime { get; set; }
+        [Required]
+        public int TotalSeats { get; set; }
     }
 }

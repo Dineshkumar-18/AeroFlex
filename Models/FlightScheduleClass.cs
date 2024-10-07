@@ -17,9 +17,7 @@ namespace AeroFlex.Models
         public int FlightTaxId { get; set; }
         [Required]
         public decimal TotalPrice { get; set; }
-        [Required]
-        [Range(1,int.MaxValue)]
-        public int TotalSeats { get; set; }
+        
         [ForeignKey("FlightScheduleId")]
         public FlightSchedule FlightSchedule { get; set; }
 

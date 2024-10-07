@@ -43,17 +43,26 @@ namespace AeroFlex.Repository.Implementations
             var flightSchedule = await _context.FlightsSchedules
                 .FirstOrDefaultAsync(f => f.FlightScheduleId == dto.FlightScheduleId);
 
+
             if (flightSchedule == null)
             {
                 throw new Exception("Flight schedule not found.");
             }
+
+
+
+            var flightInfo = await _context.Flights.FirstOrDefaultAsync(f => f.FlightId == flightSchedule.FlightId);
+
+            if (flightInfo == null) throw new Exception("flightinfo not found");
+
+
 
             var cancellationFee = new CancellationFee
             {
                 FlightScheduleId = dto.FlightScheduleId,
                 ChargeRate = dto.ChargeRate,
                 PlatformFee = dto.PlatformFee,
-                ApplicableDueDate = dto.ApplicableDueDate,
+                ApplicableDueDate = flightSchedule.DepartureTime.AddHours(-2),
                 FlightSchedule = flightSchedule
             };
 
@@ -75,7 +84,6 @@ namespace AeroFlex.Repository.Implementations
             cancellationFee.FlightScheduleId = dto.FlightScheduleId;
             cancellationFee.ChargeRate = dto.ChargeRate;
             cancellationFee.PlatformFee = dto.PlatformFee;
-            cancellationFee.ApplicableDueDate = dto.ApplicableDueDate;
 
             await _context.SaveChangesAsync();
             return MapToDto(cancellationFee);
@@ -104,7 +112,6 @@ namespace AeroFlex.Repository.Implementations
                 FlightScheduleId = cancellationFee.FlightScheduleId,
                 ChargeRate = cancellationFee.ChargeRate,
                 PlatformFee = cancellationFee.PlatformFee,
-                ApplicableDueDate = cancellationFee.ApplicableDueDate
             };
         }
 

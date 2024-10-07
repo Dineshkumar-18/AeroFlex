@@ -5,9 +5,9 @@ namespace AeroFlex.Dtos
     public class FlightSearchDto
     {
         [Required]
-        public string DepartureAirport { get; set; }
+        public int DepartureAirport { get; set; }
         [Required]
-        public string ArrivalAirport { get; set; }
+        public int ArrivalAirport { get; set; }
         [Required]
         public DateOnly DepartureDate { get; set; }
         public DateOnly? ReturnDate { get; set; }

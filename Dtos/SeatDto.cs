@@ -6,7 +6,5 @@ namespace AeroFlex.Dtos
     {
         [Required]
         public List<string> ClassNames { get; set; }
-        [Required]
-        public List<string> SeatTypePattern { get; set; }
     }
 }

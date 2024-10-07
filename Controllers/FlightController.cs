@@ -12,12 +12,12 @@ using System.Security.Claims;
 namespace AeroFlex.Controllers
 {
     [Route("api/[controller]")]
-    [Authorize(Roles = "FlightOwner")]
     [ApiController]
     public class FlightController(IFlight flightRepository, ApplicationDbContext context, IFlightPricingService flightPricing, ISeatService seatService) : ControllerBase
     {
         [HttpPost]
         [Route("add")]
+        [Authorize(Roles = "FlightOwner")]
         public async Task<ActionResult> AddFlight([FromBody] AddFlightDto addFlightDto)
         {
             if(!ModelState.IsValid)
@@ -54,6 +54,7 @@ namespace AeroFlex.Controllers
 
         [HttpPut]
         [Route("update/{flightId}")]
+        [Authorize(Roles = "FlightOwner")]
         public async Task<ActionResult> UpdateFlight(int flightId, [FromBody] AddFlightDto addFlightDto)
         {
             if (!ModelState.IsValid)
@@ -91,13 +92,15 @@ namespace AeroFlex.Controllers
 
 
         [HttpPost]
-        [Route("addSchedule")]
-        public async Task<ActionResult> AddFlightSchedule([FromQuery] int flightId, [FromBody] AddFlightScheduleDto addSchedule)
+        [Route("addSchedule/{flightId}")]
+        [Authorize(Roles = "FlightOwner")]
+        public async Task<ActionResult> AddFlightSchedule(int flightId, [FromBody] AddFlightScheduleDto addSchedule)
         {
-            var errors = ModelState.Values.SelectMany(v => v.Errors)
-                                      .Select(e => e.ErrorMessage)
-                                      .ToList();
-            return BadRequest(new { Errors = errors });
+           
+            if(!ModelState.IsValid)
+            {
+                return BadRequest("invalid model");
+            }
 
             var FlightOwnerId = HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value!;
             var Role = HttpContext.User.FindFirst(ClaimTypes.Role)?.Value;
@@ -112,28 +115,17 @@ namespace AeroFlex.Controllers
             {
                 return Forbid("You are not authorized to perform this action.");
             }
-            var airline = await context.Airlines.Include(a => a.Flights).Where(a => a.FlightOwnerId == int.Parse(FlightOwnerId)).FirstOrDefaultAsync();
-            if (airline != null && airline.Flights.Any())
-            {
-                // Assuming you want the first flight ID (or modify this as needed)
-                if (!airline.Flights.Any(f => f.FlightId == flightId))
-                {
-                    return Unauthorized("You are not allowed schedule the flight");
-                }
+          
 
                 var fli = await flightRepository.AddFlightSchedule(addSchedule, flightId);
 
                 if (!fli.flag) { return StatusCode(StatusCodes.Status400BadRequest, fli.message); }
 
                 return Ok(fli);
-            }
-            else
-            {
-                return Forbid();
-            }
         }
         [HttpPost]
         [Route("add-pricing/{flightScheduleId}")]
+        [Authorize(Roles = "FlightOwner")]
         public async Task<ActionResult> SetFlightPricing(int flightScheduleId, FlightPricingDto flightPricingDto)
         {
             if (!ModelState.IsValid) return BadRequest("Model is invalid");
@@ -152,6 +144,7 @@ namespace AeroFlex.Controllers
 
         [HttpPost]
         [Route("add-class-pricing/{flightScheduleId}")]
+        [Authorize(Roles = "FlightOwner")]
         public async Task<ActionResult> SetFlightScheduleClassPricing(int flightScheduleId, List<ClassPricingDto> classPricingDtos)
         {
             if (!ModelState.IsValid) return BadRequest("Model is invalid");
@@ -172,6 +165,7 @@ namespace AeroFlex.Controllers
 
         [HttpPost]
         [Route("add-classType-pricing/{flightScheduleId}")]
+        [Authorize(Roles = "FlightOwner")]
         public async Task<ActionResult> SetFlightScheduleClassTypePricing(int flightScheduleId, Dictionary<string, List<decimal>> seatTypePricing)
         {
             if (!ModelState.IsValid) return BadRequest("Model is invalid");
@@ -190,6 +184,7 @@ namespace AeroFlex.Controllers
 
         [HttpPost]
         [Route("add-seat-pricing/{flightScheduleId}")]
+        [Authorize(Roles = "FlightOwner")]
         public async Task<ActionResult> SetSeatPricing(int flightScheduleId, SeatDto seatDto)
         {
             if (!ModelState.IsValid) return BadRequest("Model is invalid");
@@ -203,13 +198,14 @@ namespace AeroFlex.Controllers
 
             if (!response.flag) StatusCode(StatusCodes.Status500InternalServerError, response.message);
 
-            return Ok(response);
+            return Ok();
         }
 
 
 
 
         [HttpPut]
+        [Authorize(Roles = "FlightOwner")]
         [Route("updateStatusReadyToSchedule/{flightScheduleId}")]
         public async Task<ActionResult> UpdateStatusReadyToSchedule(int flightScheduleId)
         {
@@ -234,6 +230,7 @@ namespace AeroFlex.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "FlightOwner")]
         [Route("flightsByAirline/{id}")]
         public async Task<ActionResult> FlightsByAirlline(int id)
         {

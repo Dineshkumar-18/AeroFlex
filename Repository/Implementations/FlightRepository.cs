@@ -28,15 +28,28 @@ namespace AeroFlex.Repository.Implementations
 
             var flight = await _context.FlightsSchedules.Where(fs => fs.FlightId == flightId).ToListAsync();
 
-            var latestArrivalTime = flight.Max(f => f.ArrivalTime);
+            var newDepartureTime = FlightSchedule.DepartureTime;
+            var newArrivalTime = FlightSchedule.ArrivalTime;
 
-            if (latestArrivalTime.AddHours(1) > FlightSchedule.DepartureTime)
+            // Fetch existing schedules for the same flight
+            var existingSchedules = _context.FlightsSchedules
+                .Where(fs => fs.FlightId == flightId) // Filter by specific flight
+                .ToList(); // Get all schedules for that flight
+
+            // Check for time clashes
+            foreach (var existingSchedule in existingSchedules)
             {
-                return new GeneralResponse(false, "Departure time should be at least 1 hour after the last flight's arrival time.");
+                // Determine if there's a conflict
+                bool isConflict = (newDepartureTime < existingSchedule.ArrivalTime && newArrivalTime > existingSchedule.DepartureTime);
+
+                if (isConflict)
+                {
+                    return new GeneralResponse(false, "Scheduling conflict: The new flight's timing overlaps with an existing flight.");
+                }
             }
 
 
-           var SameTimeFlightSchedule = _context.FlightsSchedules
+            var SameTimeFlightSchedule = _context.FlightsSchedules
           .Where(fs => fs.DepartureAirportId == DepartAirport.AirportId
               && fs.ArrivalAirportId == ArrivalAirport.AirportId    
               && fs.Duration == (FlightSchedule.ArrivalTime - FlightSchedule.DepartureTime))
@@ -49,6 +62,7 @@ namespace AeroFlex.Repository.Implementations
             var flightSchedule = new FlightSchedule
             {
                 FlightId = flightId,
+                TotalSeats= FlightSchedule.TotalSeats,
                 DepartureAirportId = DepartAirport.AirportId,
                 ArrivalAirportId = ArrivalAirport.AirportId,
                 DepartureTime = FlightSchedule.DepartureTime,
@@ -62,7 +76,7 @@ namespace AeroFlex.Repository.Implementations
 
             var flightNumber = await _context.Flights.FirstOrDefaultAsync(f => f.FlightId == flightId);
 
-            return new GeneralResponse(true, $"FlightNumber {flightNumber.FlightNumber} has been scheduled successfully");
+            return new GeneralResponse(true, $"{flightSchedule.FlightScheduleId}");
 
 
         }

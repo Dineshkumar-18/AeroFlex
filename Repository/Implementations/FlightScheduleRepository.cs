@@ -10,13 +10,13 @@ namespace AeroFlex.Repository.Implementations
     public class FlightScheduleRepository(ApplicationDbContext context) : IFlightScheduleRepository
     {
 
-        public async Task<List<FlightScheduleDTO>> GetFlightSchedulesAsync(string departureAirport, string arrivalAirport, DateOnly date, string Class, int TotalPassengers)
+        public async Task<List<FlightScheduleDTO>> GetFlightSchedulesAsync(int departureAirport, int arrivalAirport, DateOnly date, string Class, int TotalPassengers)
         {
             var departureAirportId = await context.Airports
-           .FirstOrDefaultAsync(a => a.AirportName == departureAirport);
+           .FirstOrDefaultAsync(a => a.AirportId == departureAirport);
 
             var arrivalAirportId = await context.Airports
-                .FirstOrDefaultAsync(a => a.AirportName == arrivalAirport);
+                .FirstOrDefaultAsync(a => a.AirportId == arrivalAirport);
 
             if (departureAirportId == null || arrivalAirportId == null)
             {
@@ -66,7 +66,8 @@ namespace AeroFlex.Repository.Implementations
                                      flightpricing.Totalprice,
                                      flightpricing.TaxAmount,
                                      departureCity=dairport.City,
-                                     arrivalCity=aairport.City
+                                     arrivalCity=aairport.City,
+                                     airline.AirlineLogo,
                                  } into seatGroup
                                  where seatGroup.Count() >= TotalPassengers // Check if available seats >= total passengers
                                  select new FlightScheduleDTO
@@ -87,6 +88,7 @@ namespace AeroFlex.Repository.Implementations
                                      Duration = TimeOnly.FromTimeSpan(seatGroup.Key.ArrivalTime - seatGroup.Key.DepartureTime),
                                      FlightPricings = seatGroup.Key.Totalprice,
                                      TaxCharges = seatGroup.Key.TaxAmount,
+                                     AirlineImagePath= seatGroup.Key.AirlineLogo,
                                      AvailableSeatsCount = seatGroup.Count() // The count of available seats
                                  }).ToListAsync();
 
